@@ -613,7 +613,7 @@
               <div class="dog-card">
                 <img
                   class="dog-photo"
-                  src="Emi.jpg"
+                  src="C:\Users\dwlod\Desktop\Aplikacja\Emi.jpg"
                   alt="Czarnobiały cavalier king charles spaniel"
                 />
                 <div class="dog-card-content">
@@ -896,35 +896,40 @@
       function stopTimer() {
         clearInterval(state.timerInterval);
       }
-
       async function loadQuestions() {
         startTestBtn.disabled = true;
         questionsStatus.textContent = 'Wczytywanie bazy pytań...';
 
-        try {
-          const response = await fetch('./questions_sg_203.json');
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
+      try {
+        const response = await fetch('./questions_sg_203.json');
+        console.log('STATUS FETCH:', response.status, response.url);
 
-          const data = await response.json();
-          if (!Array.isArray(data)) {
-            throw new Error('Plik JSON ma nieprawidłowy format.');
-          }
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-          questionBank = data;
-          state.questionsLoaded = true;
-          questionsStatus.textContent = `Baza pytań gotowa. Wczytano ${questionBank.length} pytań.`;
-          startTestBtn.disabled = false;
-          updateTopStats();
-        } catch (error) {
-          console.error('Błąd ładowania pytań:', error);
-          state.questionsLoaded = false;
-          questionBank = [];
-          questionsStatus.textContent = 'Nie udało się wczytać questions_sg_203.json. Sprawdź, czy plik jest w tym samym folderze co index.html.';
-          updateTopStats();
+      const data = await response.json();
+        console.log('Pytania wczytane:', data);
+
+      if (!Array.isArray(data)) {
+        throw new Error('Plik JSON ma nieprawidłowy format.');
+      }
+
+        questionBank = data;
+        state.questionsLoaded = true;
+        questionsStatus.textContent = `Baza pytań gotowa. Wczytano ${questionBank.length} pytań.`;
+        startTestBtn.disabled = false;
+        updateTopStats();
+      } catch (error) {
+        console.error('Błąd ładowania pytań:', error);
+        state.questionsLoaded = false;
+        questionBank = [];
+        questionsStatus.textContent = `Błąd ładowania: ${error.message}`;
+        updateTopStats();
         }
       }
+
+      
 
       function startTest() {
         const participantName = participantNameInput.value.trim();
