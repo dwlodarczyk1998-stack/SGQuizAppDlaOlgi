@@ -1,1217 +1,2641 @@
-<!DOCTYPE html>
-<html lang="pl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quiz Pro | Testy i progres</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      :root {
-        --bg: #0b1020;
-        --bg-soft: #121936;
-        --panel: rgba(15, 23, 42, 0.86);
-        --panel-strong: rgba(15, 23, 42, 0.95);
-        --line: rgba(148, 163, 184, 0.18);
-        --text: #e5eefc;
-        --muted: #94a3b8;
-        --primary: #4f46e5;
-        --primary-2: #7c3aed;
-        --success: #22c55e;
-        --danger: #ef4444;
-        --warning: #f59e0b;
-        --shadow: 0 18px 60px rgba(2, 6, 23, 0.42);
-        --radius-xl: 28px;
-        --radius-lg: 22px;
-        --radius-md: 16px;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      html, body {
-        margin: 0;
-        min-height: 100%;
-        font-family: 'Inter', sans-serif;
-        background:
-          radial-gradient(circle at top left, rgba(79, 70, 229, 0.35), transparent 26%),
-          radial-gradient(circle at top right, rgba(124, 58, 237, 0.22), transparent 24%),
-          linear-gradient(180deg, #060913 0%, #0b1020 45%, #0f172a 100%);
-        color: var(--text);
-      }
-
-      body {
-        padding: 28px;
-      }
-
-      .app-shell {
-        width: min(1200px, 100%);
-        margin: 0 auto;
-      }
-
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        margin-bottom: 28px;
-        padding: 18px 22px;
-        background: rgba(11, 16, 32, 0.55);
-        border: 1px solid var(--line);
-        border-radius: 22px;
-        backdrop-filter: blur(18px);
-        box-shadow: var(--shadow);
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-
-      .brand-badge {
-        width: 48px;
-        height: 48px;
-        border-radius: 16px;
-        display: grid;
-        place-items: center;
-        font-weight: 800;
-        background: linear-gradient(135deg, var(--primary), var(--primary-2));
-        color: white;
-        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.35);
-      }
-
-      .brand h1 {
-        margin: 0;
-        font-size: 1.15rem;
-      }
-
-      .brand p {
-        margin: 3px 0 0;
-        color: var(--muted);
-        font-size: 0.94rem;
-      }
-
-      .nav {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .nav button,
-      .primary-btn,
-      .ghost-btn,
-      .answer-btn,
-      .small-btn {
-        border: none;
-        font: inherit;
-        cursor: pointer;
-        transition: 0.22s ease;
-      }
-
-      .nav button {
-        padding: 12px 18px;
-        border-radius: 14px;
-        color: var(--text);
-        background: rgba(148, 163, 184, 0.08);
-        border: 1px solid transparent;
-      }
-
-      .nav button.active,
-      .nav button:hover {
-        background: rgba(79, 70, 229, 0.18);
-        border-color: rgba(99, 102, 241, 0.45);
-      }
-
-      .hero,
-      .panel {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(22px);
-      }
-
-      .hero {
-        display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 24px;
-        padding: 34px;
-      }
-
-      .hero h2 {
-        margin: 0 0 14px;
-        font-size: clamp(2rem, 5vw, 3.3rem);
-        line-height: 1.06;
-      }
-
-      .hero p {
-        margin: 0 0 24px;
-        color: var(--muted);
-        font-size: 1.05rem;
-        line-height: 1.7;
-        max-width: 62ch;
-      }
-
-      .stats-grid,
-      .cards-grid {
-        display: grid;
-        gap: 18px;
-      }
-
-      .stats-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        margin-top: 24px;
-      }
-
-      .cards-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        margin-top: 22px;
-      }
-
-      .stat-card,
-      .feature-card,
-      .side-card,
-      .dog-card,
-      .name-panel {
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--line);
-        background: rgba(15, 23, 42, 0.72);
-      }
-
-      .stat-card {
-        padding: 18px;
-      }
-
-      .stat-card .label,
-      .feature-card .label,
-      .result-card .label,
-      .field-label {
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-
-      .stat-card .value {
-        margin-top: 8px;
-        font-size: 1.65rem;
-        font-weight: 800;
-      }
-
-      .feature-card,
-      .dog-card,
-      .name-panel {
-        padding: 18px;
-      }
-
-      .feature-card h3,
-      .side-card h3,
-      .panel h3,
-      .dog-card h3,
-      .name-panel h3 {
-        margin: 0 0 10px;
-        font-size: 1rem;
-      }
-
-      .feature-card p,
-      .side-card p,
-      .dog-card p,
-      .name-panel p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.6;
-      }
-
-      .hero-side {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-      }
-
-      .side-card {
-        padding: 22px;
-      }
-
-      .dog-card {
-        overflow: hidden;
-        padding: 0;
-      }
-
-      .dog-photo {
-        display: block;
-        width: 100%;
-        height: 260px;
-        object-fit: cover;
-        opacity: 0.92;
-      }
-
-      .dog-card-content {
-        padding: 18px;
-      }
-
-      .primary-btn,
-      .ghost-btn,
-      .small-btn {
-        padding: 13px 18px;
-        border-radius: 14px;
-        font-weight: 700;
-      }
-
-      .primary-btn {
-        background: linear-gradient(135deg, var(--primary), var(--primary-2));
-        color: white;
-        box-shadow: 0 10px 28px rgba(79, 70, 229, 0.38);
-      }
-
-      .primary-btn:hover,
-      .small-btn:hover {
-        transform: translateY(-1px);
-        filter: brightness(1.05);
-      }
-
-      .ghost-btn {
-        background: rgba(148, 163, 184, 0.08);
-        color: var(--text);
-        border: 1px solid var(--line);
-      }
-
-      .cta-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .panel {
-        padding: 28px;
-      }
-
-      .panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 22px;
-      }
-
-      .panel-header p {
-        margin: 6px 0 0;
-        color: var(--muted);
-      }
-
-      .name-panel {
-        margin-top: 18px;
-      }
-
-      .form-grid {
-        display: grid;
-        grid-template-columns: 1.3fr auto;
-        gap: 12px;
-        margin-top: 16px;
-      }
-
-      .name-input {
-        width: 100%;
-        padding: 15px 16px;
-        border-radius: 16px;
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        background: rgba(11, 16, 32, 0.82);
-        color: var(--text);
-        font: inherit;
-        outline: none;
-      }
-
-      .name-input:focus {
-        border-color: rgba(99, 102, 241, 0.7);
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.16);
-      }
-
-      .status-note {
-        margin-top: 12px;
-        color: var(--muted);
-        font-size: 0.92rem;
-      }
-
-      .quiz-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        flex-wrap: wrap;
-        margin-bottom: 22px;
-      }
-
-      .quiz-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .meta-pill {
-        padding: 10px 14px;
-        border-radius: 999px;
-        background: rgba(148, 163, 184, 0.08);
-        border: 1px solid var(--line);
-        color: var(--text);
-        font-size: 0.95rem;
-      }
-
-      .progress-track {
-        height: 12px;
-        border-radius: 999px;
-        background: rgba(148, 163, 184, 0.12);
-        overflow: hidden;
-        margin-bottom: 24px;
-      }
-
-      .progress-bar {
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, var(--primary), var(--primary-2));
-        width: 0;
-        transition: width 0.25s ease;
-      }
-
-      .question-box {
-        padding: 24px;
-        border-radius: 24px;
-        background: rgba(15, 23, 42, 0.68);
-        border: 1px solid var(--line);
-      }
-
-      .question-label {
-        color: #a5b4fc;
-        font-weight: 700;
-        margin-bottom: 10px;
-      }
-
-      .question-text {
-        font-size: clamp(1.15rem, 2.4vw, 1.55rem);
-        line-height: 1.5;
-        margin-bottom: 24px;
-        font-weight: 700;
-      }
-
-      .answers {
-        display: grid;
-        gap: 12px;
-      }
-
-      .answer-btn {
-        width: 100%;
-        text-align: left;
-        padding: 16px 18px;
-        border-radius: 18px;
-        color: var(--text);
-        background: rgba(148, 163, 184, 0.08);
-        border: 1px solid rgba(148, 163, 184, 0.16);
-      }
-
-      .answer-btn:hover {
-        transform: translateY(-1px);
-        border-color: rgba(99, 102, 241, 0.42);
-      }
-
-      .answer-btn.selected {
-        background: rgba(79, 70, 229, 0.18);
-        border-color: rgba(99, 102, 241, 0.7);
-        box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.35);
-      }
-
-      .quiz-actions,
-      .result-actions,
-      .table-actions {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 22px;
-      }
-
-      .small-btn {
-        background: rgba(148, 163, 184, 0.08);
-        color: var(--text);
-        border: 1px solid var(--line);
-      }
-
-      .table-wrap {
-        overflow-x: auto;
-        border: 1px solid var(--line);
-        border-radius: 18px;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 760px;
-        background: rgba(15, 23, 42, 0.56);
-      }
-
-      th, td {
-        padding: 16px;
-        text-align: left;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-      }
-
-      th {
-        color: #cbd5e1;
-        font-size: 0.92rem;
-        background: rgba(15, 23, 42, 0.9);
-      }
-
-      td {
-        color: var(--text);
-      }
-
-      .score-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 12px;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 0.9rem;
-      }
-
-      .score-high { background: rgba(34, 197, 94, 0.16); color: #86efac; }
-      .score-mid { background: rgba(245, 158, 11, 0.16); color: #fcd34d; }
-      .score-low { background: rgba(239, 68, 68, 0.16); color: #fca5a5; }
-
-      .empty-state {
-        padding: 34px;
-        border-radius: 22px;
-        text-align: center;
-        color: var(--muted);
-        border: 1px dashed rgba(148, 163, 184, 0.24);
-        background: rgba(15, 23, 42, 0.42);
-      }
-
-      .result-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 18px;
-        margin-top: 24px;
-      }
-
-      .result-card {
-        padding: 22px;
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        background: rgba(15, 23, 42, 0.72);
-      }
-
-      .result-card .big {
-        margin-top: 8px;
-        font-size: 1.5rem;
-        font-weight: 800;
-      }
-
-      .chart-shell {
-        padding: 22px;
-        border-radius: 22px;
-        border: 1px solid var(--line);
-        background: rgba(15, 23, 42, 0.72);
-      }
-
-      .footer-note {
-        margin-top: 24px;
-        color: var(--muted);
-        font-size: 0.92rem;
-      }
-
-      .hidden {
-        display: none !important;
-      }
-
-      @media (max-width: 980px) {
-        .hero,
-        .cards-grid,
-        .stats-grid,
-        .result-grid,
-        .form-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 720px) {
-        body {
-          padding: 16px;
-        }
-
-        .topbar,
-        .hero,
-        .panel {
-          padding: 18px;
-        }
-
-        .panel-header,
-        .quiz-head,
-        .table-actions {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .dog-photo {
-          height: 220px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-badge">QP</div>
-          <div>
-            <h1>Quiz Pro SG</h1>
-            <p>Profesjonalna platforma testowa z rankingiem i analizą postępów</p>
-          </div>
-        </div>
-        <nav class="nav">
-          <button class="active" data-view="home">Start</button>
-          <button data-view="test">Test</button>
-          <button data-view="ranking">Ranking</button>
-          <button data-view="progress">Progres</button>
-        </nav>
-      </header>
-
-      <main>
-        <section id="view-home" class="view">
-          <div class="hero">
-            <div>
-              <h2>Sprawdź wiedzę w nowoczesnym teście online.</h2>
-              <p>
-                Aplikacja losuje 10 pytań z bazy JSON, mierzy czas rozwiązania,
-                zapisuje wyniki w pamięci przeglądarki i prezentuje historię podejść
-                w przejrzystym rankingu oraz na wykresie progresu.
-              </p>
-              <div class="cta-row">
-                <button class="primary-btn" id="startTestHero">Przejdź do testu</button>
-                <button class="ghost-btn" id="goProgress">Zobacz progres</button>
-              </div>
-
-              <div class="stats-grid">
-                <div class="stat-card">
-                  <div class="label">Liczba pytań w bazie</div>
-                  <div class="value" id="statQuestionCount">0</div>
-                </div>
-                <div class="stat-card">
-                  <div class="label">Liczba zapisanych podejść</div>
-                  <div class="value" id="statAttemptsCount">0</div>
-                </div>
-                <div class="stat-card">
-                  <div class="label">Najlepszy wynik</div>
-                  <div class="value" id="statBestScore">0%</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="hero-side">
-              <div class="dog-card">
-                <img
-                  class="dog-photo"
-                  src="https://commons.wikimedia.org/wiki/Special:FilePath/Chien_Cavalier_King_Charles_2.jpg"
-                  alt="Czarnobiały cavalier king charles spaniel"
-                />
-                <div class="dog-card-content">
-                  <h3>Przyjazny akcent wizualny</h3>
-                  <p>
-                    Delikatnie wkomponowany cavalier dodaje stronie bardziej ciepłego,
-                    eleganckiego charakteru bez odciągania uwagi od testu.
-                  </p>
-                </div>
-              </div>
-              <div class="side-card">
-                <h3>Jak to działa?</h3>
-                <p>
-                  Użytkownik wpisuje imię lub nazwę, rozpoczyna test i odpowiada kolejno
-                  na 10 losowych pytań z pliku JSON.
-                </p>
-              </div>
-              <div class="side-card">
-                <h3>Zapis wyników</h3>
-                <p>
-                  Każde podejście jest zapisywane w localStorage razem z nazwą osoby,
-                  dzięki czemu ranking i wykres progresu pozostają dostępne po odświeżeniu strony.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="cards-grid">
-            <div class="feature-card">
-              <div class="label">Moduł testowy</div>
-              <h3>10 losowych pytań</h3>
-              <p>Za każdym razem inny zestaw pytań pobrany z pliku <strong>questions_sg_203.json</strong>.</p>
-            </div>
-            <div class="feature-card">
-              <div class="label">Wyniki</div>
-              <h3>Ocena, czas i uczestnik</h3>
-              <p>Po zakończeniu użytkownik widzi procent poprawnych odpowiedzi, czas oraz swoją nazwę.</p>
-            </div>
-            <div class="feature-card">
-              <div class="label">Analityka</div>
-              <h3>Ranking i progres</h3>
-              <p>Historia podejść, najlepsze wyniki oraz wykres kolejnych testów zapisanych w przeglądarce.</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="view-test" class="view hidden">
-          <div class="panel">
-            <div id="quizIntro">
-              <div class="panel-header">
-                <div>
-                  <h3>Tryb testu</h3>
-                  <p>Wpisz nazwę osoby rozwiązującej test i rozpocznij 10 pytań z bazy JSON.</p>
-                </div>
-              </div>
-
-              <div class="name-panel">
-                <div class="field-label">Imię i nazwisko lub nazwa użytkownika</div>
-                <div class="form-grid">
-                  <input
-                    id="participantNameInput"
-                    class="name-input"
-                    type="text"
-                    placeholder="Np. Jan Kowalski"
-                    maxlength="60"
-                  />
-                  <button class="primary-btn" id="startTestBtn">Start testu</button>
-                </div>
-                <div class="status-note" id="questionsStatus">
-                  Trwa przygotowywanie bazy pytań...
-                </div>
-              </div>
-
-              <div class="footer-note">
-                Umieść plik <strong>questions_sg_203.json</strong> w tym samym folderze co <strong>index.html</strong>,
-                aby aplikacja automatycznie wczytała pytania po uruchomieniu strony.
-              </div>
-            </div>
-
-            <div id="quizGame" class="hidden">
-              <div class="quiz-head">
-                <div>
-                  <h3>Test wiedzy</h3>
-                  <p id="quizSubtitle">Odpowiedz na wszystkie pytania.</p>
-                </div>
-                <div class="quiz-meta">
-                  <div class="meta-pill" id="participantDisplay">Uczestnik: —</div>
-                  <div class="meta-pill" id="questionCounter">Pytanie 1 / 10</div>
-                  <div class="meta-pill" id="timerDisplay">00:00</div>
-                </div>
-              </div>
-
-              <div class="progress-track">
-                <div class="progress-bar" id="progressBar"></div>
-              </div>
-
-              <div class="question-box">
-                <div class="question-label" id="questionCategory">Kategoria</div>
-                <div class="question-text" id="questionText"></div>
-                <div class="answers" id="answersContainer"></div>
-              </div>
-
-              <div class="quiz-actions">
-                <button class="small-btn" id="cancelTestBtn">Anuluj</button>
-                <button class="primary-btn" id="nextQuestionBtn" disabled>Dalej</button>
-              </div>
-            </div>
-
-            <div id="quizResult" class="hidden">
-              <div class="panel-header">
-                <div>
-                  <h3>Wynik testu</h3>
-                  <p>Podsumowanie ostatniego podejścia zapisane w historii wyników.</p>
-                </div>
-              </div>
-
-              <div class="result-grid">
-                <div class="result-card">
-                  <div class="label">Uczestnik</div>
-                  <div class="big" id="resultParticipant">—</div>
-                </div>
-                <div class="result-card">
-                  <div class="label">Wynik procentowy</div>
-                  <div class="big" id="resultScore">0%</div>
-                </div>
-                <div class="result-card">
-                  <div class="label">Poprawne odpowiedzi</div>
-                  <div class="big" id="resultCorrect">0 / 10</div>
-                </div>
-                <div class="result-card">
-                  <div class="label">Czas testu</div>
-                  <div class="big" id="resultTime">00:00</div>
-                </div>
-              </div>
-
-              <div class="result-actions">
-                <button class="ghost-btn" id="goRankingBtn">Przejdź do rankingu</button>
-                <button class="primary-btn" id="restartTestBtn">Rozwiąż ponownie</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="view-ranking" class="view hidden">
-          <div class="panel">
-            <div class="panel-header">
-              <div>
-                <h3>Ranking wyników</h3>
-                <p>Lista wszystkich zapisanych podejść, sortowana od najlepszego wyniku.</p>
-              </div>
-              <div class="table-actions">
-                <button class="small-btn" id="clearResultsBtn">Wyczyść wyniki</button>
-              </div>
-            </div>
-            <div id="rankingContent"></div>
-          </div>
-        </section>
-
-        <section id="view-progress" class="view hidden">
-          <div class="panel">
-            <div class="panel-header">
-              <div>
-                <h3>Progres użytkownika</h3>
-                <p>Wykres prezentuje procentowy wynik kolejnych podejść do testu.</p>
-              </div>
-            </div>
-            <div id="progressContent"></div>
-          </div>
-        </section>
-      </main>
-    </div>
-
-    <script>
-      let questionBank = [];
-
-      const STORAGE_KEY = 'quizProResults';
-      const QUESTIONS_PER_TEST = 10;
-
-      const state = {
-        currentView: 'home',
-        testQuestions: [],
-        currentQuestionIndex: 0,
-        selectedAnswerIndex: null,
-        answersMap: [],
-        timerInterval: null,
-        testStartTime: null,
-        elapsedSeconds: 0,
-        chartInstance: null,
-        currentParticipant: '',
-        questionsLoaded: false
-      };
-
-      const navButtons = document.querySelectorAll('.nav button');
-      const views = document.querySelectorAll('.view');
-      const rankingContent = document.getElementById('rankingContent');
-      const progressContent = document.getElementById('progressContent');
-
-      const quizIntro = document.getElementById('quizIntro');
-      const quizGame = document.getElementById('quizGame');
-      const quizResult = document.getElementById('quizResult');
-
-      const participantNameInput = document.getElementById('participantNameInput');
-      const participantDisplay = document.getElementById('participantDisplay');
-      const questionsStatus = document.getElementById('questionsStatus');
-      const startTestBtn = document.getElementById('startTestBtn');
-
-      const questionCounter = document.getElementById('questionCounter');
-      const timerDisplay = document.getElementById('timerDisplay');
-      const progressBar = document.getElementById('progressBar');
-      const questionCategory = document.getElementById('questionCategory');
-      const questionText = document.getElementById('questionText');
-      const answersContainer = document.getElementById('answersContainer');
-      const nextQuestionBtn = document.getElementById('nextQuestionBtn');
-
-      function formatTime(seconds) {
-        const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
-        const secs = String(seconds % 60).padStart(2, '0');
-        return `${mins}:${secs}`;
-      }
-
-      function loadResults() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          return raw ? JSON.parse(raw) : [];
-        } catch (error) {
-          console.error('Błąd odczytu wyników:', error);
-          return [];
-        }
-      }
-
-      function saveResults(results) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(results));
-      }
-
-      function getScoreClass(score) {
-        if (score >= 80) return 'score-badge score-high';
-        if (score >= 50) return 'score-badge score-mid';
-        return 'score-badge score-low';
-      }
-
-      function shuffleArray(array) {
-        const copy = [...array];
-        for (let i = copy.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [copy[i], copy[j]] = [copy[j], copy[i]];
-        }
-        return copy;
-      }
-
-      function updateTopStats() {
-        const results = loadResults();
-        const best = results.length ? Math.max(...results.map(r => r.scorePercent)) : 0;
-        document.getElementById('statQuestionCount').textContent = questionBank.length;
-        document.getElementById('statAttemptsCount').textContent = results.length;
-        document.getElementById('statBestScore').textContent = `${best}%`;
-      }
-
-      function switchView(view) {
-        state.currentView = view;
-        views.forEach(section => {
-          section.classList.toggle('hidden', section.id !== `view-${view}`);
-        });
-        navButtons.forEach(button => {
-          button.classList.toggle('active', button.dataset.view === view);
-        });
-
-        if (view === 'ranking') renderRanking();
-        if (view === 'progress') renderProgress();
-      }
-
-      function startTimer() {
-        clearInterval(state.timerInterval);
-        state.testStartTime = Date.now();
-        state.elapsedSeconds = 0;
-        timerDisplay.textContent = formatTime(0);
-
-        state.timerInterval = setInterval(() => {
-          state.elapsedSeconds = Math.floor((Date.now() - state.testStartTime) / 1000);
-          timerDisplay.textContent = formatTime(state.elapsedSeconds);
-        }, 1000);
-      }
-
-      function stopTimer() {
-        clearInterval(state.timerInterval);
-      }
-
-      async function loadQuestions() {
-        startTestBtn.disabled = true;
-        questionsStatus.textContent = 'Wczytywanie bazy pytań...';
-
-        try {
-          const response = await fetch('./questions_sg_203.json');
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-
-          const data = await response.json();
-          if (!Array.isArray(data)) {
-            throw new Error('Plik JSON ma nieprawidłowy format.');
-          }
-
-          questionBank = data;
-          state.questionsLoaded = true;
-          questionsStatus.textContent = `Baza pytań gotowa. Wczytano ${questionBank.length} pytań.`;
-          startTestBtn.disabled = false;
-          updateTopStats();
-        } catch (error) {
-          console.error('Błąd ładowania pytań:', error);
-          state.questionsLoaded = false;
-          questionBank = [];
-          questionsStatus.textContent = 'Nie udało się wczytać questions_sg_203.json. Sprawdź, czy plik jest w tym samym folderze co index.html.';
-          updateTopStats();
-        }
-      }
-
-      function startTest() {
-        const participantName = participantNameInput.value.trim();
-
-        if (!state.questionsLoaded) {
-          alert('Baza pytań nie została jeszcze poprawnie wczytana.');
-          return;
-        }
-
-        if (!participantName) {
-          alert('Wpisz imię i nazwisko albo nazwę użytkownika przed rozpoczęciem testu.');
-          participantNameInput.focus();
-          return;
-        }
-
-        if (questionBank.length < QUESTIONS_PER_TEST) {
-          alert(`Baza pytań musi zawierać co najmniej ${QUESTIONS_PER_TEST} pytań.`);
-          return;
-        }
-
-        state.currentParticipant = participantName;
-        participantDisplay.textContent = `Uczestnik: ${state.currentParticipant}`;
-        state.testQuestions = shuffleArray(questionBank).slice(0, QUESTIONS_PER_TEST);
-        state.currentQuestionIndex = 0;
-        state.selectedAnswerIndex = null;
-        state.answersMap = Array(QUESTIONS_PER_TEST).fill(null);
-
-        quizIntro.classList.add('hidden');
-        quizResult.classList.add('hidden');
-        quizGame.classList.remove('hidden');
-
-        startTimer();
-        renderQuestion();
-        switchView('test');
-      }
-
-      function renderQuestion() {
-        const question = state.testQuestions[state.currentQuestionIndex];
-        state.selectedAnswerIndex = state.answersMap[state.currentQuestionIndex];
-
-        questionCounter.textContent = `Pytanie ${state.currentQuestionIndex + 1} / ${QUESTIONS_PER_TEST}`;
-        questionCategory.textContent = question.category || 'Pytanie testowe';
-        questionText.textContent = question.question;
-        progressBar.style.width = `${((state.currentQuestionIndex + 1) / QUESTIONS_PER_TEST) * 100}%`;
-
-        answersContainer.innerHTML = '';
-        question.answers.forEach((answer, index) => {
-          const button = document.createElement('button');
-          button.className = 'answer-btn';
-          if (state.selectedAnswerIndex === index) button.classList.add('selected');
-          button.textContent = `${String.fromCharCode(65 + index)}. ${answer}`;
-          button.addEventListener('click', () => selectAnswer(index));
-          answersContainer.appendChild(button);
-        });
-
-        nextQuestionBtn.disabled = state.selectedAnswerIndex === null;
-        nextQuestionBtn.textContent = state.currentQuestionIndex === QUESTIONS_PER_TEST - 1 ? 'Zakończ test' : 'Dalej';
-      }
-
-      function selectAnswer(index) {
-        state.selectedAnswerIndex = index;
-        state.answersMap[state.currentQuestionIndex] = index;
-        [...answersContainer.children].forEach((button, btnIndex) => {
-          button.classList.toggle('selected', btnIndex === index);
-        });
-        nextQuestionBtn.disabled = false;
-      }
-
-      function nextQuestion() {
-        if (state.selectedAnswerIndex === null) return;
-
-        if (state.currentQuestionIndex < QUESTIONS_PER_TEST - 1) {
-          state.currentQuestionIndex += 1;
-          renderQuestion();
-          return;
-        }
-
-        finishTest();
-      }
-
-      function finishTest() {
-        stopTimer();
-        const correctAnswers = state.testQuestions.reduce((acc, question, index) => {
-          return acc + (state.answersMap[index] === question.correctIndex ? 1 : 0);
-        }, 0);
-
-        const scorePercent = Math.round((correctAnswers / QUESTIONS_PER_TEST) * 100);
-        const totalTime = state.elapsedSeconds;
-        const attemptDate = new Date();
-
-        const results = loadResults();
-        results.push({
-          id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
-          participantName: state.currentParticipant,
-          scorePercent,
-          correctAnswers,
-          totalQuestions: QUESTIONS_PER_TEST,
-          totalTime,
-          dateISO: attemptDate.toISOString(),
-          displayDate: attemptDate.toLocaleString('pl-PL')
-        });
-        saveResults(results);
-
-        document.getElementById('resultParticipant').textContent = state.currentParticipant;
-        document.getElementById('resultScore').textContent = `${scorePercent}%`;
-        document.getElementById('resultCorrect').textContent = `${correctAnswers} / ${QUESTIONS_PER_TEST}`;
-        document.getElementById('resultTime').textContent = formatTime(totalTime);
-
-        quizGame.classList.add('hidden');
-        quizResult.classList.remove('hidden');
-        updateTopStats();
-      }
-
-      function cancelTest() {
-        stopTimer();
-        state.testQuestions = [];
-        state.answersMap = [];
-        state.currentQuestionIndex = 0;
-        quizGame.classList.add('hidden');
-        quizResult.classList.add('hidden');
-        quizIntro.classList.remove('hidden');
-      }
-
-      function renderRanking() {
-        const results = loadResults();
-        if (!results.length) {
-          rankingContent.innerHTML = `
-            <div class="empty-state">
-              Brak zapisanych wyników. Rozwiąż pierwszy test, aby zapełnić ranking.
-            </div>
-          `;
-          return;
-        }
-
-        const sorted = [...results].sort((a, b) => {
-          if (b.scorePercent !== a.scorePercent) return b.scorePercent - a.scorePercent;
-          return a.totalTime - b.totalTime;
-        });
-
-        rankingContent.innerHTML = `
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Uczestnik</th>
-                  <th>Data</th>
-                  <th>Wynik</th>
-                  <th>Poprawne</th>
-                  <th>Czas</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${sorted.map((item, index) => `
-                  <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.participantName || '—'}</td>
-                    <td>${item.displayDate}</td>
-                    <td><span class="${getScoreClass(item.scorePercent)}">${item.scorePercent}%</span></td>
-                    <td>${item.correctAnswers} / ${item.totalQuestions}</td>
-                    <td>${formatTime(item.totalTime)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-      }
-
-      function renderProgress() {
-        const results = loadResults().sort((a, b) => new Date(a.dateISO) - new Date(b.dateISO));
-
-        if (!results.length) {
-          progressContent.innerHTML = `
-            <div class="empty-state">
-              Brak danych do wyświetlenia. Ukończ przynajmniej jeden test, aby zobaczyć wykres progresu.
-            </div>
-          `;
-          return;
-        }
-
-        progressContent.innerHTML = `
-          <div class="chart-shell">
-            <canvas id="progressChart" height="110"></canvas>
-          </div>
-          <div class="footer-note">
-            Oś X przedstawia kolejne podejścia, a oś Y wynik procentowy uzyskany w teście.
-          </div>
-        `;
-
-        const ctx = document.getElementById('progressChart');
-        if (state.chartInstance) {
-          state.chartInstance.destroy();
-        }
-
-        state.chartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: results.map((item, index) => `${index + 1}. ${item.participantName || 'Uczestnik'}`),
-            datasets: [{
-              label: 'Wynik %',
-              data: results.map(item => item.scorePercent),
-              tension: 0.35,
-              fill: true,
-              borderWidth: 3,
-              pointRadius: 4,
-              pointHoverRadius: 6
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                labels: {
-                  color: '#e5eefc'
-                }
-              },
-              tooltip: {
-                callbacks: {
-                  afterLabel: (context) => {
-                    const item = results[context.dataIndex];
-                    return [
-                      `Uczestnik: ${item.participantName || '—'}`,
-                      `Czas: ${formatTime(item.totalTime)}`,
-                      `Data: ${item.displayDate}`
-                    ];
-                  }
-                }
-              }
-            },
-            scales: {
-              x: {
-                ticks: { color: '#cbd5e1' },
-                grid: { color: 'rgba(148, 163, 184, 0.08)' }
-              },
-              y: {
-                min: 0,
-                max: 100,
-                ticks: {
-                  color: '#cbd5e1',
-                  callback: value => `${value}%`
-                },
-                grid: { color: 'rgba(148, 163, 184, 0.08)' }
-              }
-            }
-          }
-        });
-      }
-
-      function clearResults() {
-        const confirmed = confirm('Czy na pewno chcesz usunąć wszystkie zapisane wyniki?');
-        if (!confirmed) return;
-        localStorage.removeItem(STORAGE_KEY);
-        updateTopStats();
-        renderRanking();
-        renderProgress();
-      }
-
-      navButtons.forEach(button => {
-        button.addEventListener('click', () => switchView(button.dataset.view));
-      });
-
-      document.getElementById('startTestHero').addEventListener('click', () => {
-        switchView('test');
-        participantNameInput.focus();
-      });
-      document.getElementById('goProgress').addEventListener('click', () => switchView('progress'));
-      document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
-      document.getElementById('cancelTestBtn').addEventListener('click', cancelTest);
-      document.getElementById('restartTestBtn').addEventListener('click', () => {
-        quizResult.classList.add('hidden');
-        quizIntro.classList.remove('hidden');
-        participantNameInput.focus();
-      });
-      document.getElementById('goRankingBtn').addEventListener('click', () => switchView('ranking'));
-      document.getElementById('clearResultsBtn').addEventListener('click', clearResults);
-      startTestBtn.addEventListener('click', startTest);
-      participantNameInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') startTest();
-      });
-
-      updateTopStats();
-      switchView('home');
-      loadQuestions();
-    </script>
-  </body>
-</html>
+[
+  {
+    "id": 1,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Pierwsza premier-kobieta w Polsce to:",
+    "answers": [
+      "Hanna Suchocka",
+      "Radosław Sikorski",
+      "Donald Tusk",
+      "Mark Rutte"
+    ],
+    "correctIndex": 0,
+    "explanation": "Hanna Suchocka była pierwszą kobietą, która objęła urząd Prezesa Rady Ministrów w Polsce. Sprawowała tę funkcję w latach 1992–1993."
+  },
+  {
+    "id": 2,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Siedziba Parlamentu Europejskiego znajduje się w:",
+    "answers": [
+      "Luksemburgu",
+      "Hadze",
+      "Strasburgu",
+      "Brukseli"
+    ],
+    "correctIndex": 2,
+    "explanation": "Oficjalną siedzibą Parlamentu Europejskiego jest Strasburg. Część prac odbywa się też w Brukseli, ale siedziba statutowa to właśnie Strasburg."
+  },
+  {
+    "id": 3,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Podatek katastralny to jedna z form opodatkowania:",
+    "answers": [
+      "nieruchomości",
+      "towarów i usług",
+      "spadków i darowizn",
+      "osób prawnych"
+    ],
+    "correctIndex": 0,
+    "explanation": "Podatek katastralny wiąże się z posiadaniem nieruchomości i zwykle zależy od jej wartości. Nie dotyczy towarów ani usług."
+  },
+  {
+    "id": 4,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "PIT to podatek, który nakłada się na:",
+    "answers": [
+      "towary i usługi",
+      "osoby prawne",
+      "osoby fizyczne",
+      "nieruchomości"
+    ],
+    "correctIndex": 2,
+    "explanation": "PIT to podatek dochodowy od osób fizycznych. Płacą go osoby osiągające dochody, np. z pracy, działalności czy umów cywilnoprawnych."
+  },
+  {
+    "id": 5,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aktualnie Ministrem Spraw Zagranicznych jest:",
+    "answers": [
+      "Andrzej Duda",
+      "Donald Tusk",
+      "Radosław Sikorski",
+      "Adam Bodnar"
+    ],
+    "correctIndex": 2,
+    "explanation": "Minister Spraw Zagranicznych odpowiada za politykę zagraniczną Polski. Wskazana odpowiedź jest zgodna z materiałem testowym."
+  },
+  {
+    "id": 6,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Polska przystąpiła do Traktatu Północnoatlantyckiego (NATO):",
+    "answers": [
+      "12 marca 1999 roku",
+      "11 listopada 1918 roku",
+      "24 października 1945 roku",
+      "1 maja 2004 roku"
+    ],
+    "correctIndex": 0,
+    "explanation": "Tego dnia Polska oficjalnie została członkiem NATO. Był to ważny krok wzmacniający bezpieczeństwo państwa."
+  },
+  {
+    "id": 7,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Sekretarzem Generalnym NATO jest:",
+    "answers": [
+      "Mark Rutte",
+      "Radosław Sikorski",
+      "Hanna Suchocka",
+      "Donald Tusk"
+    ],
+    "correctIndex": 0,
+    "explanation": "Sekretarz Generalny NATO stoi na czele Sojuszu i koordynuje jego działania polityczne. W materiale testowym wskazano Marka Ruttego."
+  },
+  {
+    "id": 8,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Obywatele Unii Europejskiej wybierają posłów i posłanki do Parlamentu Europejskiego co:",
+    "answers": [
+      "4 lata",
+      "10 lat",
+      "5 lat",
+      "6 lat"
+    ],
+    "correctIndex": 2,
+    "explanation": "Kadencja Parlamentu Europejskiego trwa 5 lat. W tym samym cyklu odbywają się wybory do PE we wszystkich państwach członkowskich."
+  },
+  {
+    "id": 9,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Członkiem Unii Europejskiej nie jest:",
+    "answers": [
+      "Szwajcaria",
+      "Norwegia",
+      "Islandia",
+      "Bośnia i Hercegowina"
+    ],
+    "correctIndex": 3,
+    "explanation": "Bośnia i Hercegowina nie należy do UE. Jest państwem aspirującym do członkostwa, ale nie jest jeszcze członkiem."
+  },
+  {
+    "id": 10,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Ile gwiazd widnieje na fladze Unii Europejskiej?",
+    "answers": [
+      "12",
+      "27",
+      "15",
+      "10"
+    ],
+    "correctIndex": 0,
+    "explanation": "Na fladze UE znajduje się 12 gwiazd. Ich liczba nie oznacza liczby państw, tylko symbolizuje jedność i doskonałość."
+  },
+  {
+    "id": 11,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Jaki jest tytuł hymnu Unii Europejskiej?",
+    "answers": [
+      "Marsz Europy",
+      "Hymn Jedności",
+      "Europa",
+      "Oda do radości"
+    ],
+    "correctIndex": 3,
+    "explanation": "Hymnem UE jest fragment IX Symfonii Ludwiga van Beethovena. To jeden z najbardziej rozpoznawalnych symboli europejskiej wspólnoty."
+  },
+  {
+    "id": 12,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aktualnie Prezesem Rady Ministrów jest:",
+    "answers": [
+      "Mateusz Morawiecki",
+      "Szymon Hołownia",
+      "Andrzej Duda",
+      "Donald Tusk"
+    ],
+    "correctIndex": 3,
+    "explanation": "Premier kieruje pracami Rady Ministrów i odpowiada za politykę rządu. W materiale testowym wskazano Donalda Tuska."
+  },
+  {
+    "id": 13,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Banknoty i monety euro są w obiegu od:",
+    "answers": [
+      "2002 roku",
+      "1999 roku",
+      "2004 roku",
+      "2007 roku"
+    ],
+    "correctIndex": 0,
+    "explanation": "Euro jako gotówka weszło do obiegu w 2002 roku. Wcześniej funkcjonowało już jako waluta rozliczeniowa."
+  },
+  {
+    "id": 14,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Od 2019 roku Komisji Europejskiej przewodniczy:",
+    "answers": [
+      "Radosław Sikorski",
+      "Ursula von der Leyen",
+      "Mark Rutte",
+      "Hanna Suchocka"
+    ],
+    "correctIndex": 1,
+    "explanation": "Przewodnicząca Komisji Europejskiej stoi na czele jednego z najważniejszych organów UE. Od 2019 roku funkcję tę pełni Ursula von der Leyen."
+  },
+  {
+    "id": 15,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aktualnie Ministrem Sprawiedliwości jest:",
+    "answers": [
+      "Adam Bodnar",
+      "Marcin Wiącek",
+      "Zbigniew Ziobro",
+      "Tomasz Siemoniak"
+    ],
+    "correctIndex": 0,
+    "explanation": "Minister Sprawiedliwości odpowiada za funkcjonowanie resortu sprawiedliwości. Wskazana odpowiedź wynika z materiału."
+  },
+  {
+    "id": 16,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Prawo szariatu oznacza:",
+    "answers": [
+      "prawo zwyczajowe obowiązujące w krajach zachodnich",
+      "prawo regulujące wszystkie aspekty życia społecznego i prywatnego wyznawców islamu",
+      "zbiór zasad wyłącznie dotyczących handlu międzynarodowego",
+      "prawo regulujące wyłącznie życie polityczne wyznawców islamu"
+    ],
+    "correctIndex": 1,
+    "explanation": "Szariat to system norm religijnych i prawnych w islamie. Obejmuje zarówno życie prywatne, jak i społeczne wiernych."
+  },
+  {
+    "id": 17,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aktualnie urzędującym Rzecznikiem Praw Obywatelskich jest:",
+    "answers": [
+      "Adam Bodnar",
+      "Szymon Hołownia",
+      "Ewa Łętowska",
+      "Marcin Wiącek"
+    ],
+    "correctIndex": 3,
+    "explanation": "RPO stoi na straży wolności i praw człowieka oraz obywatela. W materiale testowym wskazano Marcina Wiącka."
+  },
+  {
+    "id": 18,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aktualnie prezydentem Ukrainy jest:",
+    "answers": [
+      "Denys Szmyhal",
+      "Wołodymyr Zełenski",
+      "Petro Poroszenko",
+      "Witalij Kliczko"
+    ],
+    "correctIndex": 1,
+    "explanation": "Wołodymyr Zełenski pełni urząd prezydenta Ukrainy od 2019 roku. Jest kluczową postacią ukraińskiej polityki w czasie wojny."
+  },
+  {
+    "id": 19,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aktualnie prezydentem Stanów Zjednoczonych jest:",
+    "answers": [
+      "Barack Obama",
+      "Donald Trump",
+      "Kamala Harris",
+      "Joe Biden"
+    ],
+    "correctIndex": 1,
+    "explanation": "W materiale testowym poprawną odpowiedzią jest Donald Trump. To pytanie dotyczy bieżącej sytuacji politycznej wskazanej w arkuszu."
+  },
+  {
+    "id": 20,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Jakimi sprawami zajmuje się Amnesty International?",
+    "answers": [
+      "ochroną środowiska naturalnego",
+      "pomocą humanitarną po klęskach żywiołowych",
+      "ochroną praw człowieka",
+      "promocją handlu międzynarodowego"
+    ],
+    "correctIndex": 2,
+    "explanation": "Amnesty International to organizacja pozarządowa zajmująca się monitorowaniem i obroną praw człowieka. Działa na całym świecie."
+  },
+  {
+    "id": 21,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Kryzys migracyjny, który rozpoczął się latem 2021 r. i jest elementem wojny hybrydowej, dotyczy:",
+    "answers": [
+      "granicy polsko-niemieckiej",
+      "granicy turecko-greckiej",
+      "granicy Białorusi z granicą zewnętrzną Unii Europejskiej",
+      "granicy ukraińsko-rosyjskiej"
+    ],
+    "correctIndex": 2,
+    "explanation": "Chodzi o kryzys na granicy białorusko-polskiej i szerzej na granicy Białorusi z UE. Był on traktowany jako element presji politycznej i destabilizacji."
+  },
+  {
+    "id": 22,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aneksja Krymu i wojna w Donbasie miała miejsce w roku:",
+    "answers": [
+      "2014",
+      "2022",
+      "2008",
+      "2016"
+    ],
+    "correctIndex": 0,
+    "explanation": "W 2014 roku Rosja dokonała aneksji Krymu. W tym samym czasie rozpoczął się konflikt zbrojny w Donbasie."
+  },
+  {
+    "id": 23,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Inwazja Federacji Rosyjskiej na Ukrainę o charakterze regularnej wojny rozpoczęła się 24 lutego:",
+    "answers": [
+      "2020 r.",
+      "2022 r.",
+      "2014 r.",
+      "2024 r."
+    ],
+    "correctIndex": 1,
+    "explanation": "Tego dnia rozpoczęła się pełnoskalowa agresja Rosji na Ukrainę. Był to przełomowy moment dla bezpieczeństwa Europy."
+  },
+  {
+    "id": 24,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Unia Europejska liczy obecnie:",
+    "answers": [
+      "28 państw członkowskich",
+      "25 państw członkowskich",
+      "30 państw członkowskich",
+      "27 państw członkowskich"
+    ],
+    "correctIndex": 3,
+    "explanation": "Po wystąpieniu Wielkiej Brytanii UE liczy 27 państw. To aktualny skład wspólnoty wskazany w materiale."
+  },
+  {
+    "id": 25,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Polska nie jest krajem należącym do:",
+    "answers": [
+      "strefy Schengen",
+      "Grupy Wyszehradzkiej",
+      "Unii Europejskiej",
+      "Rady Nordyckiej"
+    ],
+    "correctIndex": 3,
+    "explanation": "Rada Nordycka skupia państwa nordyckie, a Polska do niej nie należy. Polska jest natomiast członkiem UE, Schengen i Grupy Wyszehradzkiej."
+  },
+  {
+    "id": 26,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Ze względu na panujący ustrój polityczny Polska jest:",
+    "answers": [
+      "republiką parlamentarną",
+      "monarchią konstytucyjną",
+      "federacją",
+      "republiką prezydencką"
+    ],
+    "correctIndex": 0,
+    "explanation": "Polska jest republiką, w której istotną rolę odgrywa parlament. Nie jest monarchią ani republiką prezydencką."
+  },
+  {
+    "id": 27,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Kto pierwszy pełnił w Polsce funkcję Rzecznika Praw Obywatelskich?",
+    "answers": [
+      "Marcin Wiącek",
+      "Adam Bodnar",
+      "Janusz Kochanowski",
+      "Ewa Łętowska"
+    ],
+    "correctIndex": 3,
+    "explanation": "Ewa Łętowska była pierwszym polskim Rzecznikiem Praw Obywatelskich. Jej urząd miał duże znaczenie dla ochrony praw obywatelskich po okresie PRL."
+  },
+  {
+    "id": 28,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Islamska fundamentalistyczna organizacja terrorystyczna działająca na terenie Palestyny to:",
+    "answers": [
+      "Talibowie",
+      "Hamas",
+      "Al-Kaida",
+      "Hezbollah"
+    ],
+    "correctIndex": 1,
+    "explanation": "Hamas jest organizacją palestyńską o charakterze islamistycznym. Jest uznawany za organizację terrorystyczną przez wiele państw i organizacji."
+  },
+  {
+    "id": 29,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Które z wymienionych państw nie należy do Unii Europejskiej?",
+    "answers": [
+      "Szwajcaria",
+      "Hiszpania",
+      "Austria",
+      "Chorwacja"
+    ],
+    "correctIndex": 0,
+    "explanation": "Szwajcaria nie jest członkiem UE. Utrzymuje jednak bliskie relacje gospodarcze z Unią."
+  },
+  {
+    "id": 30,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Niderlandy to inna nazwa kraju w Europie:",
+    "answers": [
+      "Dania",
+      "Belgia",
+      "Holandia",
+      "Szwecja"
+    ],
+    "correctIndex": 2,
+    "explanation": "Niderlandy to oficjalna nazwa państwa, które potocznie nazywa się Holandią. W praktyce w testach taka odpowiedź jest uznawana za poprawną."
+  },
+  {
+    "id": 31,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Patriarchat to model rodziny oparty na:",
+    "answers": [
+      "wspólnym zarządzaniu bez przywództwa",
+      "na wiodącej roli mężczyzny",
+      "wiodącej roli kobiety",
+      "partnerstwie kobiet i mężczyzn"
+    ],
+    "correctIndex": 1,
+    "explanation": "Patriarchat oznacza model społeczny lub rodzinny, w którym dominującą pozycję ma mężczyzna. To przeciwieństwo modelu partnerskiego."
+  },
+  {
+    "id": 32,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Naród, który nie ma własnego państwa to:",
+    "answers": [
+      "Szkoci",
+      "Katalończycy",
+      "Kurdowie",
+      "Baskowie"
+    ],
+    "correctIndex": 2,
+    "explanation": "Kurdowie są narodem bez własnego państwa narodowego. Zamieszkują głównie tereny Turcji, Iraku, Iranu i Syrii."
+  },
+  {
+    "id": 33,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Dopuszczalny poziom inflacji w Polsce wynosi:",
+    "answers": [
+      "nie ma takiego poziomu",
+      "2 %",
+      "10 %",
+      "5 %"
+    ],
+    "correctIndex": 0,
+    "explanation": "Nie istnieje jeden „dopuszczalny poziom inflacji” zapisany w taki sposób jak w odpowiedziach. Inflacja jest zjawiskiem ekonomicznym, a nie stałą normą prawną."
+  },
+  {
+    "id": 34,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "VAT jest podatkiem płaconym:",
+    "answers": [
+      "od nieruchomości",
+      "od dochodów osób fizycznych",
+      "od towarów i usług",
+      "od spadków i darowizn"
+    ],
+    "correctIndex": 2,
+    "explanation": "VAT to podatek od wartości dodanej. Jest związany ze sprzedażą towarów i świadczeniem usług."
+  },
+  {
+    "id": 35,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aktualnie najniższy (I) próg podatkowy PIT wynosi:",
+    "answers": [
+      "12 %",
+      "17 %",
+      "8 %",
+      "32 %"
+    ],
+    "correctIndex": 0,
+    "explanation": "Pierwszy próg PIT obejmuje niższą stawkę opodatkowania dochodów osób fizycznych. W materiale testowym poprawną odpowiedzią jest 12%."
+  },
+  {
+    "id": 36,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Określenie Arabska Wiosna dotyczy:",
+    "answers": [
+      "integracji gospodarczej państw arabskich po 2000 roku",
+      "protestów społecznych i konfliktów zbrojnych w krajach arabskich, w latach 2010–2012",
+      "rewolucji przemysłowej w Europie Zachodniej w XIX wieku",
+      "wojny izraelsko-arabskiej z 1973 roku"
+    ],
+    "correctIndex": 1,
+    "explanation": "Arabska Wiosna była falą protestów i przemian politycznych w świecie arabskim. W wielu miejscach doprowadziła też do konfliktów zbrojnych."
+  },
+  {
+    "id": 37,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "W regionie Afryki Północnej położone są:",
+    "answers": [
+      "Nigeria, Ghana, Kamerun",
+      "Maroko, Algieria, Tunezja",
+      "Libia, Syria, Irak",
+      "Egipt, Sudan, Etiopia"
+    ],
+    "correctIndex": 1,
+    "explanation": "To państwa położone w północnej części Afryki. Pozostałe zestawy obejmują kraje z innych regionów świata."
+  },
+  {
+    "id": 38,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Państwa posiadające broń jądrową zgodnie z NPT to:",
+    "answers": [
+      "Chiny, USA, Francja, Japonia, Rosja",
+      "Chiny, USA, Niemcy, Wielka Brytania, Rosja",
+      "USA, Francja, Wielka Brytania, Rosja, Indie",
+      "Chiny, USA, Francja, Wielka Brytania, Rosja"
+    ],
+    "correctIndex": 3,
+    "explanation": "To pięć państw uznanych przez Traktat o nierozprzestrzenianiu broni jądrowej. Mają one specjalny status w ramach tego porozumienia."
+  },
+  {
+    "id": 39,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Oficjalna nazwa państwa Chiny to:",
+    "answers": [
+      "Republika Chińska",
+      "Chińska Unia Ludowa",
+      "Chińska Republika Ludowa",
+      "Federacja Chińska"
+    ],
+    "correctIndex": 2,
+    "explanation": "Jest to pełna oficjalna nazwa państwa. Pozostałe odpowiedzi są niepoprawne."
+  },
+  {
+    "id": 40,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Stany Zjednoczone Ameryki to państwo federacyjne składające się z:",
+    "answers": [
+      "52 stany",
+      "48 stanów i 2 dystrykty federalne",
+      "30 stanów i stołecznego Dystryktu Kolumbii",
+      "50 stanów i stołecznego Dystryktu Kolumbii"
+    ],
+    "correctIndex": 3,
+    "explanation": "USA mają strukturę federacyjną. Oprócz 50 stanów istnieje też federalny Dystrykt Kolumbii, gdzie znajduje się Waszyngton."
+  },
+  {
+    "id": 41,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Tadż Mahal znajduje się w:",
+    "answers": [
+      "Turcji",
+      "Egipcie",
+      "Pakistanie",
+      "Indiach"
+    ],
+    "correctIndex": 3,
+    "explanation": "Tadż Mahal leży w Agrze w Indiach. To jedno z najbardziej znanych mauzoleów na świecie."
+  },
+  {
+    "id": 42,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Grenlandia to terytorium autonomiczne zależne od:",
+    "answers": [
+      "Kanady",
+      "Szwecji",
+      "Danii",
+      "Norwegii"
+    ],
+    "correctIndex": 2,
+    "explanation": "Grenlandia posiada szeroką autonomię, ale pozostaje częścią Królestwa Danii. Nie jest samodzielnym państwem."
+  },
+  {
+    "id": 43,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Miastem centralnym dla judaizmu, chrześcijaństwa i islamu jest:",
+    "answers": [
+      "Betlejem",
+      "Jerozolima",
+      "Mekka",
+      "Rzym"
+    ],
+    "correctIndex": 1,
+    "explanation": "Jerozolima ma ogromne znaczenie religijne dla trzech wielkich religii monoteistycznych. Jest jednym z najważniejszych miast świata pod względem symbolicznym."
+  },
+  {
+    "id": 44,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Prawidłowo określone stolice krajów to:",
+    "answers": [
+      "Bruksela – Belgia; Bukareszt – Chorwacja; Zagrzeb – Rumunia",
+      "Bruksela – Rumunia; Bukareszt – Belgia; Zagrzeb – Chorwacja",
+      "Bruksela – Belgia; Bukareszt – Rumunia; Zagrzeb – Słowenia",
+      "Bruksela – Belgia; Bukareszt – Rumunia; Zagrzeb –"
+    ],
+    "correctIndex": 3,
+    "explanation": "Chorwacja Wszystkie trzy pary w tej odpowiedzi są poprawne. W pozostałych wariantach występują błędne przyporządkowania."
+  },
+  {
+    "id": 45,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Największe powierzchniowo państwo na świecie to:",
+    "answers": [
+      "Kanada",
+      "Rosja",
+      "Chiny",
+      "USA"
+    ],
+    "correctIndex": 1,
+    "explanation": "Rosja zajmuje największą powierzchnię na świecie. Rozciąga się przez Europę i Azję."
+  },
+  {
+    "id": 46,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Literacką Nagrodę Nobla w 2018 roku otrzymała:",
+    "answers": [
+      "Herta Müller",
+      "Olga Tokarczuk",
+      "Svetlana Aleksijewicz",
+      "Wisława Szymborska"
+    ],
+    "correctIndex": 1,
+    "explanation": "Olga Tokarczuk została laureatką literackiego Nobla za rok 2018. To jedna z najważniejszych współczesnych polskich pisarek."
+  },
+  {
+    "id": 47,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Maria Skłodowska-Curie otrzymała Nagrodę Nobla w dziedzinie:",
+    "answers": [
+      "chemii i fizyki",
+      "literatury i chemii",
+      "medycyny i biologii",
+      "fizyki i matematyki"
+    ],
+    "correctIndex": 0,
+    "explanation": "Była jedyną osobą nagrodzoną Noblem w dwóch różnych naukach ścisłych. Otrzymała Nobla z fizyki i chemii."
+  },
+  {
+    "id": 48,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Rzeczpospolita należy do strefy Schengen:",
+    "answers": [
+      "od 2007 r.",
+      "od 1999 r.",
+      "od 2004 r.",
+      "od 2010 r."
+    ],
+    "correctIndex": 0,
+    "explanation": "Polska weszła do strefy Schengen w 2007 roku. Oznaczało to zniesienie kontroli na granicach wewnętrznych z innymi państwami tego obszaru."
+  },
+  {
+    "id": 49,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Strefa Schengen to obszar:",
+    "answers": [
+      "na którym zniesiono kontrole graniczne na granicach wewnętrznych",
+      "ze wspólną armią i rządem",
+      "bez wspólnych zasad wizowych",
+      "w którym obowiązuje wspólna waluta euro"
+    ],
+    "correctIndex": 0,
+    "explanation": "Istotą Schengen jest swobodne przemieszczanie się między państwami członkowskimi. Nie oznacza to całkowitego braku kontroli w każdej sytuacji, ale brak stałych kontroli granicznych na granicach wewnętrznych."
+  },
+  {
+    "id": 50,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Strefa Schengen to obszar:",
+    "answers": [
+      "25 państw",
+      "31 państw",
+      "27 państw",
+      "29 państw"
+    ],
+    "correctIndex": 3,
+    "explanation": "W materiale testowym wskazano liczbę 29 państw. Chodzi o aktualny skład obszaru Schengen według tego arkusza."
+  },
+  {
+    "id": 51,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Do Unii Europejskiej nie należy:",
+    "answers": [
+      "Andora",
+      "Warszawie",
+      "Strasburgu",
+      "Krakowie"
+    ],
+    "correctIndex": 0,
+    "explanation": "Andora nie jest członkiem UE. To małe państwo europejskie pozostające poza Unią."
+  },
+  {
+    "id": 52,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Do Unii Europejskiej nie należy:",
+    "answers": [
+      "Konfederacja Szwajcarska",
+      "Radosław Sikorski",
+      "Hanna Suchocka",
+      "Mark Rutte"
+    ],
+    "correctIndex": 0,
+    "explanation": "Szwajcaria nie należy do UE. Zachowuje niezależność polityczną przy jednoczesnej współpracy gospodarczej."
+  },
+  {
+    "id": 53,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Do Unii Europejskiej nie należy:",
+    "answers": [
+      "Warszawie",
+      "Strasburgu",
+      "Norwegia",
+      "Krakowie"
+    ],
+    "correctIndex": 2,
+    "explanation": "Norwegia nie należy do UE, choć uczestniczy w wielu mechanizmach współpracy europejskiej. Jest też członkiem strefy Schengen."
+  },
+  {
+    "id": 54,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Kraj, który przejął prezydencję w UE od 1 stycznia 2025 r., to:",
+    "answers": [
+      "Węgry",
+      "Belgia",
+      "Polska",
+      "Dania"
+    ],
+    "correctIndex": 2,
+    "explanation": "Prezydencja w Radzie UE jest sprawowana rotacyjnie. W materiale wskazano, że od 1 stycznia 2025 pełni ją Polska."
+  },
+  {
+    "id": 55,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Hymnem Unii Europejskiej jest:",
+    "answers": [
+      "Oda do Europy",
+      "Pieśń Jedności",
+      "finał IX symfonii L. Beethovena",
+      "Mazurek Dąbrowskiego"
+    ],
+    "correctIndex": 2,
+    "explanation": "Konkretnie chodzi o „Odę do radości”, czyli fragment IX Symfonii. To oficjalny hymn UE."
+  },
+  {
+    "id": 56,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Wspólna waluta większości krajów UE to:",
+    "answers": [
+      "euro",
+      "korona",
+      "frank",
+      "dolar"
+    ],
+    "correctIndex": 0,
+    "explanation": "Euro obowiązuje w większości państw należących do UE. Nie wszystkie kraje członkowskie przyjęły jednak tę walutę."
+  },
+  {
+    "id": 57,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Oficjalne stanowisko Polski wobec NATO to:",
+    "answers": [
+      "państwo neutralne",
+      "państwo członkowskie",
+      "państwo kandydujące",
+      "państwo partnerskie"
+    ],
+    "correctIndex": 1,
+    "explanation": "Polska jest pełnoprawnym członkiem NATO od 1999 roku. Uczestniczy w strukturach i działaniach sojuszu."
+  },
+  {
+    "id": 58,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Skrót NATO oznacza:",
+    "answers": [
+      "North Atlantic Treaty Organization",
+      "National Atlantic Treaty Organization",
+      "New Atlantic Treaty Organization",
+      "North Alliance Treaty Office"
+    ],
+    "correctIndex": 0,
+    "explanation": "Jest to pełna angielska nazwa Sojuszu Północnoatlantyckiego. Pozostałe rozwinięcia są błędne."
+  },
+  {
+    "id": 59,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "NATO jest sojuszem:",
+    "answers": [
+      "humanitarnym",
+      "polityczno-militarnym",
+      "wyłącznie militarnym",
+      "gospodarczym"
+    ],
+    "correctIndex": 1,
+    "explanation": "NATO łączy współpracę polityczną i wojskową państw członkowskich. Jego głównym celem jest wspólna obrona."
+  },
+  {
+    "id": 60,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Akt prawny regulujący współpracę krajów w ramach NATO to:",
+    "answers": [
+      "Traktat Waszyngtoński",
+      "Traktat Lizboński",
+      "Traktat Rzymski",
+      "Karta Narodów Zjednoczonych"
+    ],
+    "correctIndex": 0,
+    "explanation": "To podstawowy dokument założycielski NATO z 1949 roku. Określa zasady działania Sojuszu."
+  },
+  {
+    "id": 61,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "RP przystąpiła do NATO w:",
+    "answers": [
+      "1997 roku",
+      "2014 roku",
+      "2004 roku",
+      "1999 roku"
+    ],
+    "correctIndex": 3,
+    "explanation": "To rok wejścia Polski do Sojuszu. Było to jedno z najważniejszych wydarzeń w polityce bezpieczeństwa po 1989 roku."
+  },
+  {
+    "id": 62,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Bułgaria:",
+    "answers": [
+      "należy do Unii Europejskiej i strefy Schengen",
+      "należy tylko do Schengen",
+      "należy tylko do UE",
+      "nie należy ani do UE, ani do Schengen"
+    ],
+    "correctIndex": 0,
+    "explanation": "Bułgaria jest członkiem UE. W materiale testowym wskazano też jej przynależność do Schengen."
+  },
+  {
+    "id": 63,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Rumunia:",
+    "answers": [
+      "należy tylko do UE",
+      "należy tylko do Schengen",
+      "nie należy ani do UE, ani do Schengen",
+      "należy do Unii Europejskiej i strefy Schengen"
+    ],
+    "correctIndex": 3,
+    "explanation": "Rumunia należy do UE, a w materiale testowym została wskazana również jako państwo Schengen. To odpowiedź zgodna z arkuszem."
+  },
+  {
+    "id": 64,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Stolicą Malty jest:",
+    "answers": [
+      "Sofia",
+      "Nikozja",
+      "Rabat",
+      "Valletta"
+    ],
+    "correctIndex": 3,
+    "explanation": "Valletta to stolica Malty i jedno z najmniejszych miast-stolic w Europie. Jest ważnym centrum administracyjnym i historycznym kraju."
+  },
+  {
+    "id": 65,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Najwyższym i najstarszym odznaczeniem państwowym w Polsce jest:",
+    "answers": [
+      "Krzyż Walecznych",
+      "Medal za Długoletnią Służbę",
+      "Order Odrodzenia Polski",
+      "Order Orła Białego"
+    ],
+    "correctIndex": 3,
+    "explanation": "To najważniejsze polskie odznaczenie państwowe. Przyznawane jest za wybitne zasługi dla państwa i narodu."
+  },
+  {
+    "id": 66,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Pluralizm polityczny oznacza:",
+    "answers": [
+      "istnienie dwóch lub większej ilości partii politycznych",
+      "wyłącznie dwupartyjność konstytucyjną",
+      "brak partii politycznych",
+      "istnienie jednej partii politycznej"
+    ],
+    "correctIndex": 0,
+    "explanation": "Pluralizm oznacza wielość sił politycznych i możliwość konkurowania między nimi. Jest cechą systemu demokratycznego."
+  },
+  {
+    "id": 67,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Rzeczpospolita Polska nie graniczy z:",
+    "answers": [
+      "Niemcami",
+      "Białorusią",
+      "Łotwą",
+      "Litwą"
+    ],
+    "correctIndex": 2,
+    "explanation": "Polska nie ma wspólnej granicy z Łotwą. Graniczy natomiast z Niemcami, Czechami i Słowacją."
+  },
+  {
+    "id": 68,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Rzeczpospolita Polska nie graniczy z:",
+    "answers": [
+      "Białorusią",
+      "Litwą",
+      "Słowacją",
+      "Estonią"
+    ],
+    "correctIndex": 3,
+    "explanation": "Polska nie graniczy z Estonią. Ma natomiast granicę z Litwą, Ukrainą i Słowacją."
+  },
+  {
+    "id": 69,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Rzeczpospolita Polska graniczy z:",
+    "answers": [
+      "6 krajami",
+      "8 krajami",
+      "7 krajami",
+      "5 krajami"
+    ],
+    "correctIndex": 2,
+    "explanation": "Polska ma granice lądowe z siedmioma państwami. Są to Niemcy, Czechy, Słowacja, Litwa, Białoruś, Ukraina i Rosja."
+  },
+  {
+    "id": 70,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Rzeczpospolita Polska graniczy z:",
+    "answers": [
+      "krajami z Unii Europejskiej i spoza Unii Europejskiej",
+      "tylko państwami strefy euro",
+      "wyłącznie krajami spoza UE",
+      "wyłącznie krajami UE"
+    ],
+    "correctIndex": 0,
+    "explanation": "Część sąsiadów Polski należy do UE, a część nie. Dlatego poprawna jest odpowiedź mieszana."
+  },
+  {
+    "id": 71,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Rzeczpospolita Polska weszła do Unii Europejskiej i obszaru Schengen:",
+    "answers": [
+      "w tym samym roku",
+      "w tym samym czasie",
+      "w różnym czasie",
+      "tego samego dnia"
+    ],
+    "correctIndex": 2,
+    "explanation": "Do UE Polska weszła w 2004 roku, a do Schengen w 2007 roku. Nie nastąpiło to więc tego samego dnia ani roku."
+  },
+  {
+    "id": 72,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Oficjalne stanowisko Polski wobec strefy Schengen to:",
+    "answers": [
+      "RP nie należy do strefy Schengen",
+      "RP jest pełnoprawnym sygnatariuszem",
+      "RP ma status obserwatora",
+      "RP jest państwem kandydującym"
+    ],
+    "correctIndex": 1,
+    "explanation": "Polska należy do strefy Schengen. Oznacza to pełne uczestnictwo w tym obszarze współpracy."
+  },
+  {
+    "id": 73,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Rzeczpospolita Polska weszła do Unii Europejskiej w roku:",
+    "answers": [
+      "2004",
+      "2002",
+      "1999",
+      "2007"
+    ],
+    "correctIndex": 0,
+    "explanation": "Polska została członkiem UE 1 maja 2004 roku. Był to ważny etap integracji europejskiej."
+  },
+  {
+    "id": 74,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Polska ma najdłuższą granicę z:",
+    "answers": [
+      "Ukrainą",
+      "Czechami",
+      "Słowacją",
+      "Niemcami"
+    ],
+    "correctIndex": 1,
+    "explanation": "Najdłuższa granica Polski przebiega z Republiką Czeską. Ma ponad 700 km długości."
+  },
+  {
+    "id": 75,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Najkrótsza granica Polski to:",
+    "answers": [
+      "granica z Rosją",
+      "granica z Białorusią",
+      "granica z Ukrainą",
+      "granica z Litwą"
+    ],
+    "correctIndex": 3,
+    "explanation": "Granica polsko-litewska jest najkrótszą granicą lądową Polski. Jest znacznie krótsza niż granice z Czechami, Słowacją czy Ukrainą."
+  },
+  {
+    "id": 76,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Prerogatywa to:",
+    "answers": [
+      "obowiązek wynikający z ustawy",
+      "szczególne prawo, przywilej związany z zajmowanym stanowiskiem",
+      "zwyczaj parlamentarny",
+      "akt prawa miejscowego"
+    ],
+    "correctIndex": 1,
+    "explanation": "Prerogatywy to szczególne uprawnienia przysługujące określonemu organowi lub urzędowi. W prawie konstytucyjnym często odnosi się to do uprawnień Prezydenta RP."
+  },
+  {
+    "id": 77,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Ministrem Spraw Wewnętrznych i Administracji jest:",
+    "answers": [
+      "Tomasz Siemoniak",
+      "Radosław Sikorski",
+      "Adam Bodnar",
+      "Mariusz Kamiński"
+    ],
+    "correctIndex": 0,
+    "explanation": "MSWiA odpowiada m.in. za bezpieczeństwo wewnętrzne i administrację publiczną. W materiale testowym wskazano Tomasza Siemoniaka."
+  },
+  {
+    "id": 78,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Aktualnie prezydentem Turcji jest:",
+    "answers": [
+      "Mustafa Kemal Atatürk",
+      "Recep Tayyip Erdoğan",
+      "Kemal Kılıçdaroğlu",
+      "Abdullah Gül"
+    ],
+    "correctIndex": 1,
+    "explanation": "Recep Tayyip Erdoğan od lat odgrywa kluczową rolę w polityce Turcji. To poprawna odpowiedź w zestawie."
+  },
+  {
+    "id": 79,
+    "category": "Aktualna sytuacja polityczna, gospodarcza i społeczna",
+    "question": "Parlament Europejski:",
+    "answers": [
+      "jest wyłącznie organem sądowym UE",
+      "jest organem doradczym Rady Europy",
+      "wszystkie ww. odpowiedzi są prawidłowe",
+      "nie ma wpływu na budżet UE"
+    ],
+    "correctIndex": 2,
+    "explanation": "Parlament Europejski współdecyduje o budżecie UE, uczestniczy w wyborze przewodniczącego KE i kontroluje Komisję. Wszystkie wymienione funkcje mieszczą się w jego roli. Podstawowe zagadnienia prawa konstytucyjnego i administracyjnego"
+  },
+  {
+    "id": 80,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Konstytucja RP została uchwalona przez:",
+    "answers": [
+      "Sejm RP",
+      "Zgromadzenie Narodowe RP",
+      "Senat RP",
+      "Prezydenta RP"
+    ],
+    "correctIndex": 1,
+    "explanation": "Konstytucję uchwala Zgromadzenie Narodowe, czyli połączone izby parlamentu. To szczególny tryb właściwy dla ustawy zasadniczej."
+  },
+  {
+    "id": 81,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Organem odpowiedzialnym za ochronę praw człowieka i obywatela przed naruszeniami przez władze publiczne jest:",
+    "answers": [
+      "Najwyższa Izba Kontroli",
+      "Krajowa Rada Sądownictwa",
+      "Trybunał Konstytucyjny",
+      "Rzecznik Praw Obywatelskich"
+    ],
+    "correctIndex": 3,
+    "explanation": "RPO podejmuje interwencje, gdy prawa obywateli są naruszane przez organy władzy publicznej. To jeden z najważniejszych organów ochrony prawnej w Polsce."
+  },
+  {
+    "id": 82,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Konstytucja RP została przyjęta przez Naród w drodze:",
+    "answers": [
+      "wyborów powszechnych",
+      "decyzji Prezydenta RP",
+      "referendum konstytucyjnego",
+      "uchwały Sejmu"
+    ],
+    "correctIndex": 2,
+    "explanation": "Po uchwaleniu przez Zgromadzenie Narodowe Konstytucja została zatwierdzona w referendum. Ostateczna decyzja należała więc do obywateli."
+  },
+  {
+    "id": 83,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Zgodnie z art. 4 Konstytucji RP władza zwierzchnia w RP należy do:",
+    "answers": [
+      "Rady Ministrów",
+      "Prezydenta RP",
+      "Parlamentu",
+      "Narodu"
+    ],
+    "correctIndex": 3,
+    "explanation": "To jedna z podstawowych zasad ustroju RP. Oznacza, że źródłem władzy w państwie są obywatele."
+  },
+  {
+    "id": 84,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "BBN jest organem, przy pomocy którego swoje zadania wykonuje:",
+    "answers": [
+      "Prezydent",
+      "Minister Obrony Narodowej",
+      "Prezes Rady Ministrów",
+      "Marszałek Sejmu"
+    ],
+    "correctIndex": 0,
+    "explanation": "Biuro Bezpieczeństwa Narodowego wspiera Prezydenta w sprawach bezpieczeństwa i obronności. Nie jest organem rządu ani ministra."
+  },
+  {
+    "id": 85,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Konstytucyjna zasada równości obywateli oznacza, że:",
+    "answers": [
+      "wszyscy obywatele mają równe prawa i obowiązki, bez względu na płeć, rasę czy wyznanie",
+      "wszyscy mają takie same dochody",
+      "obywatele mają tylko równe obowiązki, ale nie prawa",
+      "wszyscy muszą wykonywać te same zawody"
+    ],
+    "correctIndex": 0,
+    "explanation": "Zasada równości oznacza zakaz dyskryminacji. Wszyscy powinni być traktowani według tych samych standardów prawnych."
+  },
+  {
+    "id": 86,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Konstytucja RP reguluje:",
+    "answers": [
+      "zasady funkcjonowania państwa oraz wolności, prawa i obowiązki człowieka i obywatela",
+      "jedynie strukturę sądów",
+      "wyłącznie prawa partii politycznych",
+      "wyłącznie organizację samorządu terytorialnego"
+    ],
+    "correctIndex": 0,
+    "explanation": "Konstytucja jest najwyższym aktem prawnym. Określa ustrój państwa i podstawowe prawa jednostki."
+  },
+  {
+    "id": 87,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Zasada praworządności oznacza, że:",
+    "answers": [
+      "organy władzy publicznej działają na podstawie i w granicach prawa",
+      "obywatele działają tylko za zgodą urzędu",
+      "prawo dotyczy wyłącznie sądów",
+      "organy władzy mogą działać dowolnie"
+    ],
+    "correctIndex": 0,
+    "explanation": "Władza publiczna nie może działać dowolnie. Każde jej działanie musi mieć podstawę prawną."
+  },
+  {
+    "id": 88,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Obywatelstwo polskie nabywa się przez:",
+    "answers": [
+      "ukończenie 18 lat na terytorium RP",
+      "zamieszkanie w Polsce przez 3 lata",
+      "urodzenie na terytorium RP niezależnie od obywatelstwa rodziców",
+      "urodzenie z rodziców będących obywatelami RP"
+    ],
+    "correctIndex": 3,
+    "explanation": "To podstawowa zasada nabywania obywatelstwa polskiego przez pochodzenie. Samo urodzenie na terytorium Polski nie wystarcza automatycznie."
+  },
+  {
+    "id": 89,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prawem przysługującym obywatelom w RP jest:",
+    "answers": [
+      "wszystkie odpowiedzi są prawidłowe",
+      "wyłącznie prawo własności",
+      "wyłącznie opieka RP za granicą",
+      "tylko udział w wyborach"
+    ],
+    "correctIndex": 0,
+    "explanation": "Wybory, opieka ze strony RP oraz prawo własności należą do praw obywatelskich i konstytucyjnych. Dlatego poprawna jest odpowiedź zbiorcza."
+  },
+  {
+    "id": 90,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Źródłami powszechnie obowiązującego prawa RP są:",
+    "answers": [
+      "Konstytucja RP, ustawy, ratyfikowane umowy międzynarodowe, rozporządzenia i akty prawa miejscowego",
+      "Konstytucja RP, zarządzenia, uchwały i wytyczne",
+      "Konstytucja RP, ustawy, zarządzenia i decyzje",
+      "ustawy, uchwały Sejmu i rozporządzenia"
+    ],
+    "correctIndex": 0,
+    "explanation": "Tak wygląda katalog źródeł powszechnie obowiązującego prawa. Zarządzenia do niego nie należą."
+  },
+  {
+    "id": 91,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Trójpodział władzy oznacza:",
+    "answers": [
+      "podział tylko na władzę rządową i samorządową",
+      "podział władzy między władzę ustawodawczą, wykonawczą i sądowniczą",
+      "przewagę władzy wykonawczej nad sądowniczą",
+      "połączenie wszystkich władz w jednym organie"
+    ],
+    "correctIndex": 1,
+    "explanation": "To podstawowa zasada nowoczesnego państwa demokratycznego. Ma zapobiegać skupieniu całej władzy w jednym ręku."
+  },
+  {
+    "id": 92,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Naczelnym organem kontroli państwowej jest:",
+    "answers": [
+      "Rzecznik Praw Obywatelskich",
+      "Trybunał Konstytucyjny",
+      "Sąd Najwyższy",
+      "Najwyższa Izba Kontroli"
+    ],
+    "correctIndex": 3,
+    "explanation": "NIK kontroluje działalność organów administracji i gospodarowanie środkami publicznymi. Jest konstytucyjnym organem państwa."
+  },
+  {
+    "id": 93,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Organem konstytucyjnym stojącym na straży godności i praw człowieka jest:",
+    "answers": [
+      "Najwyższa Izba Kontroli",
+      "Trybunał Stanu",
+      "Sąd Najwyższy",
+      "Rzecznik Praw Obywatelskich"
+    ],
+    "correctIndex": 3,
+    "explanation": "To ustawowy i konstytucyjny strażnik praw jednostki. Jego zadaniem jest reagowanie na naruszenia praw obywateli."
+  },
+  {
+    "id": 94,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Sejm RP składa się z:",
+    "answers": [
+      "500 posłów",
+      "460 posłów",
+      "100 posłów",
+      "460 senatorów"
+    ],
+    "correctIndex": 1,
+    "explanation": "Sejm jest izbą niższą polskiego parlamentu. Liczba 460 jest stała i wynika z Konstytucji."
+  },
+  {
+    "id": 95,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Senat RP składa się z:",
+    "answers": [
+      "120 senatorów",
+      "460 senatorów",
+      "100 senatorów",
+      "50 senatorów"
+    ],
+    "correctIndex": 2,
+    "explanation": "Senat jest izbą wyższą parlamentu. W jego skład wchodzi dokładnie 100 senatorów."
+  },
+  {
+    "id": 96,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Sejm i Senat są wybierane na kadencje:",
+    "answers": [
+      "5 letnie",
+      "4 letnie",
+      "3 letnie",
+      "6 letnie"
+    ],
+    "correctIndex": 1,
+    "explanation": "Kadencja obu izb parlamentu trwa cztery lata. To podstawowy rytm wyborczy w Polsce."
+  },
+  {
+    "id": 97,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Wybrany do Sejmu może być obywatel, który kończy najpóźniej w dniu wyborów:",
+    "answers": [
+      "18 lat",
+      "30 lat",
+      "21 lat",
+      "25 lat"
+    ],
+    "correctIndex": 2,
+    "explanation": "To granica biernego prawa wyborczego do Sejmu. Kandydat musi też korzystać z pełni praw wyborczych."
+  },
+  {
+    "id": 98,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Wybrany do Senatu może być obywatel, który kończy najpóźniej w dniu wyborów:",
+    "answers": [
+      "25 lat",
+      "21 lat",
+      "30 lat",
+      "35 lat"
+    ],
+    "correctIndex": 2,
+    "explanation": "Wymóg wieku do Senatu jest wyższy niż do Sejmu. Ma to podkreślać bardziej dojrzały charakter tej izby."
+  },
+  {
+    "id": 99,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prerogatywą Prezydenta RP nie jest:",
+    "answers": [
+      "nadawanie obywatelstwa",
+      "podpisywanie ustaw",
+      "stosowanie prawa łaski",
+      "uchwalanie ustaw"
+    ],
+    "correctIndex": 3,
+    "explanation": "Ustawy uchwala parlament, a nie Prezydent. Prezydent może je podpisać, zawetować lub skierować do kontroli, ale ich nie uchwala."
+  },
+  {
+    "id": 100,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prezydent RP wybierany jest na kadencję:",
+    "answers": [
+      "4 letnią",
+      "7 letnią",
+      "5 letnią",
+      "6 letnią"
+    ],
+    "correctIndex": 2,
+    "explanation": "Kadencja Prezydenta trwa pięć lat. Konstytucja dopuszcza tylko jeden ponowny wybór."
+  },
+  {
+    "id": 101,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Zwierzchnikiem Sił Zbrojnych RP jest:",
+    "answers": [
+      "Minister Obrony Narodowej",
+      "Prezydent RP",
+      "Szef Sztabu Generalnego",
+      "Prezes Rady Ministrów"
+    ],
+    "correctIndex": 1,
+    "explanation": "To konstytucyjna funkcja Prezydenta. Nie oznacza ona jednak codziennego dowodzenia wojskiem."
+  },
+  {
+    "id": 102,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Wybory do Sejmu są:",
+    "answers": [
+      "powszechne, pośrednie, proporcjonalne, jawne",
+      "powszechne, równe, bezpośrednie, proporcjonalne, tajne",
+      "powszechne, równe, bezpośrednie, większościowe, jawne",
+      "równe, bezpośrednie, większościowe, jawne"
+    ],
+    "correctIndex": 1,
+    "explanation": "Takie cechy wynikają z Konstytucji RP. To podstawowe zasady demokratycznych wyborów do Sejmu."
+  },
+  {
+    "id": 103,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Wybory do Senatu są:",
+    "answers": [
+      "pośrednie, jawne, większościowe",
+      "powszechne, równe, proporcjonalne, tajne",
+      "powszechne, bezpośrednie, jawne",
+      "powszechne, bezpośrednie, tajne"
+    ],
+    "correctIndex": 3,
+    "explanation": "W wyborach do Senatu nie stosuje się zasady proporcjonalności tak jak do Sejmu. Obowiązuje tam inna ordynacja."
+  },
+  {
+    "id": 104,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Można być jednocześnie posłem i senatorem:",
+    "answers": [
+      "tak, tylko przez 1 rok",
+      "tak, za zgodą Marszałka Sejmu",
+      "nie",
+      "tak, bez ograniczeń"
+    ],
+    "correctIndex": 2,
+    "explanation": "Mandatu posła i senatora nie można łączyć. To zasada niepołączalności funkcji w obu izbach."
+  },
+  {
+    "id": 105,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Władzę ustawodawczą w RP sprawują:",
+    "answers": [
+      "Senat i Rada Ministrów",
+      "Sejm i Prezydent RP",
+      "Sejm i Senat",
+      "Sejm, Senat i Prezydent RP"
+    ],
+    "correctIndex": 2,
+    "explanation": "Parlament w Polsce jest dwuizbowy. Obie izby uczestniczą w procesie stanowienia prawa."
+  },
+  {
+    "id": 106,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Sejm uchwala budżet państwa na rok budżetowy w formie:",
+    "answers": [
+      "decyzji administracyjnej",
+      "uchwały",
+      "rozporządzenia",
+      "ustawy"
+    ],
+    "correctIndex": 3,
+    "explanation": "Budżet państwa przyjmuje się jako ustawę budżetową. To szczególny akt prawny o dużym znaczeniu ustrojowym."
+  },
+  {
+    "id": 107,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Najwyższym przedstawicielem RP jest:",
+    "answers": [
+      "Prezes Rady Ministrów",
+      "Prezydent RP",
+      "Minister Spraw Zagranicznych",
+      "Marszałek Sejmu"
+    ],
+    "correctIndex": 1,
+    "explanation": "Tak stanowi Konstytucja. Prezydent reprezentuje państwo zarówno wewnątrz, jak i na zewnątrz."
+  },
+  {
+    "id": 108,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Rada Ministrów składa się z:",
+    "answers": [
+      "Prezesa Rady Ministrów i ministrów",
+      "Prezydenta RP i ministrów",
+      "wyłącznie ministrów",
+      "Prezesa Rady Ministrów, ministrów i senatorów"
+    ],
+    "correctIndex": 0,
+    "explanation": "Rada Ministrów to premier i ministrowie tworzący rząd. Prezydent nie wchodzi w skład Rady Ministrów."
+  },
+  {
+    "id": 109,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Exposé to:",
+    "answers": [
+      "program działania rządu na następną kadencję wygłaszany przed uzyskaniem wotum zaufania dla Premiera",
+      "wystąpienie Prezydenta do parlamentu",
+      "coroczne sprawozdanie budżetowe",
+      "uchwałę o rozwiązaniu rządu"
+    ],
+    "correctIndex": 0,
+    "explanation": "Exposé przedstawia plan działania rządu. Jest wygłaszane przez premiera przed głosowaniem nad wotum zaufania."
+  },
+  {
+    "id": 110,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Organem udzielającym wotum zaufania nowo powołanemu premierowi jest:",
+    "answers": [
+      "Prezydent RP",
+      "Senat",
+      "Trybunał Konstytucyjny",
+      "Sejm"
+    ],
+    "correctIndex": 3,
+    "explanation": "To Sejm głosuje nad wotum zaufania dla rządu. Bez niego rząd nie może normalnie funkcjonować."
+  },
+  {
+    "id": 111,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Inicjatywy ustawodawczej nie posiada:",
+    "answers": [
+      "Prezydent RP",
+      "grupa 100 tys. obywateli",
+      "gmina",
+      "Senat"
+    ],
+    "correctIndex": 2,
+    "explanation": "Prawo inicjatywy ustawodawczej mają m.in. posłowie, Senat, Prezydent, Rada Ministrów i grupa 100 tys. obywateli. Gmina takiego uprawnienia nie ma."
+  },
+  {
+    "id": 112,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Sądy i Trybunały są władzą:",
+    "answers": [
+      "podległą Sejmowi",
+      "częścią władzy wykonawczej",
+      "organem doradczym rządu",
+      "odrębną i niezależną od innych władz"
+    ],
+    "correctIndex": 3,
+    "explanation": "To jedna z gwarancji państwa prawa. Władza sądownicza ma być niezależna od ustawodawczej i wykonawczej."
+  },
+  {
+    "id": 113,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Ochronie niepodległości państwa i granic służą:",
+    "answers": [
+      "Siły Zbrojne RP",
+      "Straż Graniczna",
+      "Agencja Bezpieczeństwa Wewnętrznego",
+      "Policja"
+    ],
+    "correctIndex": 0,
+    "explanation": "To wprost wynika z Konstytucji. Straż Graniczna ma inne zadania niż konstytucyjna obrona niepodległości państwa."
+  },
+  {
+    "id": 114,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Na straży wolności słowa, prawa do informacji oraz interesu publicznego w radiofonii i telewizji stoi:",
+    "answers": [
+      "Krajowa Rada Radiofonii i Telewizji",
+      "Urząd Komunikacji Elektronicznej",
+      "Rada Mediów Narodowych",
+      "Najwyższa Izba Kontroli"
+    ],
+    "correctIndex": 0,
+    "explanation": "KRRiT jest organem konstytucyjnym. Nadzoruje rynek radiofonii i telewizji w zakresie określonym prawem."
+  },
+  {
+    "id": 115,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Wyłączne prawo emisji pieniądza oraz ustalania i realizowania polityki pieniężnej ma:",
+    "answers": [
+      "Komisja Nadzoru Finansowego",
+      "Narodowy Bank Polski",
+      "Ministerstwo Finansów",
+      "Bank Gospodarstwa Krajowego"
+    ],
+    "correctIndex": 1,
+    "explanation": "NBP jest bankiem centralnym Polski. To on odpowiada za emisję pieniądza i politykę pieniężną."
+  },
+  {
+    "id": 116,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Zbrodnie wojenne i zbrodnie przeciwko ludzkości:",
+    "answers": [
+      "ulegają przedawnieniu po 50 latach",
+      "nie podlegają przedawnieniu",
+      "ulegają przedawnieniu po 30 latach",
+      "podlegają amnestii ustawowej"
+    ],
+    "correctIndex": 1,
+    "explanation": "Są to najcięższe zbrodnie w prawie międzynarodowym i krajowym. Uznaje się, że nie mogą ulec przedawnieniu."
+  },
+  {
+    "id": 117,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prawa osobiste wskazane w Konstytucji RP zakazują:",
+    "answers": [
+      "stosowania tortur",
+      "zatrzymania sprawcy na gorącym uczynku",
+      "stosowania kar finansowych",
+      "ograniczania wolności słowa"
+    ],
+    "correctIndex": 0,
+    "explanation": "Zakaz tortur ma charakter absolutny. Nie można go uchylić nawet w wyjątkowych okolicznościach."
+  },
+  {
+    "id": 118,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Każdy, przeciw komu prowadzone jest postępowanie karne:",
+    "answers": [
+      "ma prawo tylko do obrony ustnej",
+      "musi samodzielnie prowadzić obronę",
+      "ma prawo do obrony",
+      "nie ma prawa do adwokata"
+    ],
+    "correctIndex": 2,
+    "explanation": "Prawo do obrony jest jedną z podstawowych gwarancji procesowych. Obejmuje m.in. możliwość korzystania z pomocy obrońcy."
+  },
+  {
+    "id": 119,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Każdego uważa się za niewinnego dopóki:",
+    "answers": [
+      "jego wina nie zostanie stwierdzona prawomocnym wyrokiem sądu",
+      "prokurator wniesie akt oskarżenia",
+      "zostanie zatrzymany przez Policję",
+      "sąd wyda nieprawomocny wyrok"
+    ],
+    "correctIndex": 0,
+    "explanation": "To zasada domniemania niewinności. Chroni obywatela przed przedwczesnym uznaniem go za winnego."
+  },
+  {
+    "id": 120,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Europejski Trybunał Praw Człowieka to:",
+    "answers": [
+      "agencja UE kontrolująca granice zewnętrzne",
+      "organ międzynarodowy, który ocenia skargi na naruszenia praw człowieka w krajach członkowskich Rady Europy",
+      "instytucja Unii Europejskiej zajmująca się uchwalaniem prawa",
+      "polski sąd konstytucyjny"
+    ],
+    "correctIndex": 1,
+    "explanation": "ETPCz działa w Strasburgu i rozpatruje skargi dotyczące naruszeń Konwencji. Nie jest instytucją Unii Europejskiej."
+  },
+  {
+    "id": 121,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Zasada uniwersalności praw człowieka oznacza:",
+    "answers": [
+      "prawa człowieka przysługują wyłącznie osobom pełnoletnim",
+      "prawa człowieka obowiązują tylko w państwach demokratycznych",
+      "prawa człowieka są niezbywalne i przysługują każdemu człowiekowi, niezależnie od narodowości, rasy, płci czy religii",
+      "prawa człowieka zależą od obywatelstwa"
+    ],
+    "correctIndex": 2,
+    "explanation": "Prawa człowieka mają charakter powszechny. Przysługują każdej osobie tylko dlatego, że jest człowiekiem."
+  },
+  {
+    "id": 122,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prawa człowieka to:",
+    "answers": [
+      "zbiór obowiązków obywateli wobec państwa",
+      "zbiór przepisów wynikający z godności ludzkiej, chroniących wolność i prawa każdej osoby",
+      "zestaw zasad etykiety międzynarodowej",
+      "uprawnienia przyznawane przez pracodawcę"
+    ],
+    "correctIndex": 1,
+    "explanation": "Prawa człowieka chronią podstawowe wartości, takie jak życie, wolność i godność. Nie zależą od obywatelstwa czy poglądów."
+  },
+  {
+    "id": 123,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Powszechna Deklaracja Praw Człowieka została przyjęta przez:",
+    "answers": [
+      "NATO",
+      "ONZ",
+      "Unię Europejską",
+      "Radę Europy"
+    ],
+    "correctIndex": 1,
+    "explanation": "Deklarację uchwaliło Zgromadzenie Ogólne ONZ w 1948 roku. To jeden z najważniejszych dokumentów praw człowieka."
+  },
+  {
+    "id": 124,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Powszechna Deklaracja Praw Człowieka ONZ podkreśla:",
+    "answers": [
+      "pierwszeństwo praw państwa nad jednostką",
+      "zależność praw człowieka od obywatelstwa",
+      "niezbywalność praw człowieka",
+      "możliwość zawieszenia wszystkich praw człowieka"
+    ],
+    "correctIndex": 2,
+    "explanation": "Deklaracja opiera się na założeniu, że prawa człowieka przysługują każdemu. Nie można ich dowolnie odebrać."
+  },
+  {
+    "id": 125,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Obowiązkiem obywatela polskiego jest:",
+    "answers": [
+      "odbycie zasadniczej służby wojskowej w każdym przypadku",
+      "ponoszenie ciężarów i świadczeń publicznych",
+      "uczestnictwo w wyborach parlamentarnych",
+      "posiadanie prawa jazdy"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chodzi m.in. o obowiązek płacenia podatków i innych świadczeń publicznych. To konstytucyjny obowiązek obywatela."
+  },
+  {
+    "id": 126,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Zgodnie z Konstytucją RP ekstradycja obywatela polskiego jest:",
+    "answers": [
+      "zakazana",
+      "obowiązkowa na wniosek obcego państwa",
+      "możliwa tylko decyzją wojewody",
+      "dozwolona w każdej sytuacji"
+    ],
+    "correctIndex": 0,
+    "explanation": "W typowym ujęciu testowym przyjmuje się taką odpowiedź. Ma to chronić obywatela przed wydaniem innemu państwu."
+  },
+  {
+    "id": 127,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Poszanowanie i ochrona godności człowieka jest obowiązkiem:",
+    "answers": [
+      "obywateli prywatnych",
+      "organów władz publicznych",
+      "organizacji międzynarodowych",
+      "wyłącznie sądów powszechnych"
+    ],
+    "correctIndex": 1,
+    "explanation": "Godność człowieka jest źródłem wolności i praw. Władze publiczne mają obowiązek ją szanować i chronić."
+  },
+  {
+    "id": 128,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prawa podstawowe człowieka to zespół praw i wolności, które:",
+    "answers": [
+      "przysługują wyłącznie obywatelom państw demokratycznych",
+      "dotyczą tylko relacji pracownika z pracodawcą",
+      "przysługują każdemu człowiekowi, są niezbywalne, istnieją niezależnie od władzy i wynikają z przyrodzonej człowiekowi godności",
+      "nadaje je wyłącznie państwo i może je dowolnie cofać"
+    ],
+    "correctIndex": 2,
+    "explanation": "To klasyczna definicja praw podstawowych. Kluczowe są ich powszechność, niezbywalność i źródło w godności człowieka."
+  },
+  {
+    "id": 129,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Przestępstwo handlu ludźmi jest w Polsce zagrożone:",
+    "answers": [
+      "karą pozbawienia wolności na czas nie krótszy od lat 3",
+      "karą ograniczenia wolności",
+      "grzywną",
+      "upomnieniem"
+    ],
+    "correctIndex": 0,
+    "explanation": "Handel ludźmi to bardzo ciężkie przestępstwo. Ustawodawca przewidział za nie surową odpowiedzialność karną."
+  },
+  {
+    "id": 130,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prawa człowieka to:",
+    "answers": [
+      "normy moralne dotyczące wyłącznie życia rodzinnego",
+      "uprawnienia wynikające tylko z członkostwa w UE",
+      "przepisy podatkowe obowiązujące obywateli",
+      "powszechne normy moralne przynależne każdej jednostce w jej kontaktach z państwem, które chronią podstawowe wartości dla życia ludzi w godności"
+    ],
+    "correctIndex": 3,
+    "explanation": "Ta odpowiedź najlepiej oddaje sens praw człowieka. Chodzi o ochronę jednostki wobec państwa i innych podmiotów."
+  },
+  {
+    "id": 131,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Europejski Trybunał Praw Człowieka to:",
+    "answers": [
+      "sąd międzynarodowy orzekający w sprawie skarg na naruszenie praw i wolności zawartych w Konwencji o ochronie praw człowieka i podstawowych wolności",
+      "organ doradczy Rady Unii Europejskiej",
+      "polski trybunał do spraw konstytucyjnych",
+      "sąd administracyjny Unii Europejskiej"
+    ],
+    "correctIndex": 0,
+    "explanation": "To bardziej rozbudowana i precyzyjna definicja ETPCz. Rozpatruje skargi osób z państw Rady Europy, które ratyfikowały Konwencję."
+  },
+  {
+    "id": 132,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Co oznacza prawo do swobody wypowiedzi?",
+    "answers": [
+      "prawo do zachowania anonimowości w internecie",
+      "prawo do prowadzenia działalności gospodarczej",
+      "prawo do głosowania w każdych wyborach",
+      "prawo do wyrażania swoich poglądów, przekonań i opinii oraz otrzymywania i przekazywania informacji i idei bez ingerencji władz publicznych"
+    ],
+    "correctIndex": 3,
+    "explanation": "Wolność słowa należy do podstawowych praw człowieka. Obejmuje zarówno wypowiadanie opinii, jak i dostęp do informacji."
+  },
+  {
+    "id": 133,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Obowiązująca aktualnie Polska Konstytucja została uchwalona:",
+    "answers": [
+      "1 maja 2004 r.",
+      "17 października 1992 r.",
+      "11 listopada 1918 r.",
+      "2 kwietnia 1997 r."
+    ],
+    "correctIndex": 3,
+    "explanation": "To data uchwalenia obecnej Konstytucji RP. Weszła ona w życie po zatwierdzeniu w referendum."
+  },
+  {
+    "id": 134,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Władzę wykonawczą w Polsce sprawują:",
+    "answers": [
+      "Prezydent i Sejm",
+      "Sejm i Senat",
+      "Rada Ministrów i Senat",
+      "Rada Ministrów i Prezydent"
+    ],
+    "correctIndex": 3,
+    "explanation": "Tak wynika z Konstytucji. Władza wykonawcza jest podzielona między te dwa podmioty."
+  },
+  {
+    "id": 135,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Odpowiedzialność karną za popełnione przestępstwo nabywa się:",
+    "answers": [
+      "w dniu ukończenia 15 lat",
+      "w dniu ukończenia 16 lat",
+      "w dniu ukończenia 17 lat",
+      "w dniu ukończenia 18 lat"
+    ],
+    "correctIndex": 2,
+    "explanation": "Co do zasady od 17. roku życia odpowiada się karnie jak dorosły. Istnieją pewne wyjątki, ale w testach przyjmuje się właśnie tę granicę."
+  },
+  {
+    "id": 136,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Karą za przestępstwo nie jest:",
+    "answers": [
+      "ograniczenie wolności",
+      "grzywna",
+      "pozbawienie wolności",
+      "pouczenie i nagana"
+    ],
+    "correctIndex": 3,
+    "explanation": "Pouczenie i nagana nie są karami za przestępstwo w rozumieniu Kodeksu karnego. Karami są m.in. grzywna, ograniczenie wolności i pozbawienie wolności."
+  },
+  {
+    "id": 137,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prezesa Najwyższej Izby Kontroli powołuje:",
+    "answers": [
+      "Prezes Rady Ministrów",
+      "Senat bez udziału Sejmu",
+      "Sejm za zgodą Senatu",
+      "Prezydent RP"
+    ],
+    "correctIndex": 2,
+    "explanation": "Tryb powołania Prezesa NIK wymaga udziału obu izb parlamentu. To wzmacnia rangę tego urzędu."
+  },
+  {
+    "id": 138,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Sejm i Senat obradują na:",
+    "answers": [
+      "sesjach",
+      "konferencjach",
+      "posiedzeniach",
+      "zebraniach"
+    ],
+    "correctIndex": 2,
+    "explanation": "To oficjalna nazwa formy obrad parlamentarnych. Nie używa się tu określeń typu sympozjum czy zebranie."
+  },
+  {
+    "id": 139,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Sejm i Senat są wybierane na:",
+    "answers": [
+      "czteroletnie kadencje",
+      "trzyletnie kadencje",
+      "sześcioletnie kadencje",
+      "pięcioletnie kadencje"
+    ],
+    "correctIndex": 0,
+    "explanation": "Kadencja obu izb trwa 4 lata. To podstawowa zasada ustrojowa."
+  },
+  {
+    "id": 140,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Zbrodnie ludobójstwa oraz zbrodnie wojenne osądza:",
+    "answers": [
+      "Europejski Trybunał Praw Człowieka",
+      "Trybunał Konstytucyjny",
+      "Międzynarodowy Trybunał Karny w Hadze",
+      "Sąd Najwyższy"
+    ],
+    "correctIndex": 2,
+    "explanation": "MTK zajmuje się najpoważniejszymi zbrodniami prawa międzynarodowego. Ma siedzibę w Hadze."
+  },
+  {
+    "id": 141,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Minimalny wiek kandydata na prezydenta RP wynosi:",
+    "answers": [
+      "35 lat",
+      "30 lat",
+      "40 lat",
+      "21 lat"
+    ],
+    "correctIndex": 0,
+    "explanation": "Tyle trzeba mieć najpóźniej w dniu wyborów, aby kandydować na Prezydenta RP. To wyższy próg niż przy wyborach parlamentarnych."
+  },
+  {
+    "id": 142,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Odpowiedzialności za wykroczenie podlega ten, kto ukończył:",
+    "answers": [
+      "18 rok życia",
+      "16 rok życia",
+      "15 rok życia",
+      "17 rok życia"
+    ],
+    "correctIndex": 3,
+    "explanation": "Za wykroczenia odpowiada się od ukończenia 17 lat. To podstawowa zasada prawa wykroczeń."
+  },
+  {
+    "id": 143,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Ministra powołuje i odwołuje:",
+    "answers": [
+      "Prezydent",
+      "Marszałek Sejmu",
+      "Premier",
+      "Sejm"
+    ],
+    "correctIndex": 0,
+    "explanation": "Prezydent dokonuje tego na wniosek Prezesa Rady Ministrów. W sensie formalnym to właśnie Prezydent powołuje i odwołuje ministrów."
+  },
+  {
+    "id": 144,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Prezydent RP jest wybierany na kadencję:",
+    "answers": [
+      "7-letnią i może być ponownie wybrany wielokrotnie",
+      "6-letnią bez możliwości ponownego wyboru",
+      "4-letnią i może być wybierany bez ograniczeń",
+      "5-letnią i może być ponownie wybrany tylko raz"
+    ],
+    "correctIndex": 3,
+    "explanation": "Konstytucja dopuszcza maksymalnie dwie kadencje. Ta odpowiedź najdokładniej oddaje regułę ustrojową."
+  },
+  {
+    "id": 145,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Przestępstwa ze względu na rodzaj winy dzielą się na:",
+    "answers": [
+      "kryminalne i skarbowe",
+      "ciężkie i lekkie",
+      "zwykłe i kwalifikowane",
+      "umyślne i nieumyślne"
+    ],
+    "correctIndex": 3,
+    "explanation": "Taki podział odnosi się do strony podmiotowej czynu. Chodzi o to, czy sprawca chciał popełnić czyn, czy też zrobił to nieumyślnie."
+  },
+  {
+    "id": 146,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Bierne prawo wyborcze w wyborach do Sejmu RP uzyskuje obywatel w wieku:",
+    "answers": [
+      "30 lat",
+      "21 lat",
+      "18 lat",
+      "25 lat"
+    ],
+    "correctIndex": 1,
+    "explanation": "To minimalny wiek kandydowania do Sejmu. Niższy niż przy Senacie czy wyborach prezydenckich."
+  },
+  {
+    "id": 147,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Klub poselski tworzy co najmniej:",
+    "answers": [
+      "10 posłów",
+      "30 posłów",
+      "15 posłów",
+      "20 posłów"
+    ],
+    "correctIndex": 2,
+    "explanation": "Tyle wynosi minimalna liczba członków klubu poselskiego. Mniejsze grupy tworzą koła poselskie."
+  },
+  {
+    "id": 148,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Odpowiedzialność za czyny zabronione stanowiące przestępstwo reguluje:",
+    "answers": [
+      "Kodeks postępowania administracyjnego",
+      "Kodeks cywilny",
+      "Konstytucja RP",
+      "Ustawa z dnia 6 czerwca 1997 r. Kodeks karny"
+    ],
+    "correctIndex": 3,
+    "explanation": "Kodeks karny określa, jakie czyny są przestępstwami i jakie grożą za nie kary. To podstawowy akt w tym zakresie."
+  },
+  {
+    "id": 149,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Najwyższa kara stosowana w polskim systemie prawnym to:",
+    "answers": [
+      "kara ograniczenia wolności",
+      "kara śmierci",
+      "dożywotnie pozbawienie wolności",
+      "25 lat pozbawienia wolności"
+    ],
+    "correctIndex": 2,
+    "explanation": "W Polsce nie ma kary śmierci. Najsurowszą karą jest dożywocie."
+  },
+  {
+    "id": 150,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Termin wyborów prezydenckich w Polsce ogłasza:",
+    "answers": [
+      "Marszałek Sejmu",
+      "Prezydent RP",
+      "Prezes Rady Ministrów",
+      "Państwowa Komisja Wyborcza"
+    ],
+    "correctIndex": 0,
+    "explanation": "To Marszałek Sejmu zarządza wybory prezydenckie. Nie robi tego Prezydent ani premier."
+  },
+  {
+    "id": 151,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "W sprawach szczególnej wagi Radę Gabinetową zwołuje:",
+    "answers": [
+      "Marszałek Senatu",
+      "Prezes Rady Ministrów",
+      "Minister Spraw Wewnętrznych",
+      "Prezydent RP"
+    ],
+    "correctIndex": 3,
+    "explanation": "Rada Gabinetowa to Rada Ministrów obradująca pod przewodnictwem Prezydenta. Zwołuje ją właśnie Prezydent."
+  },
+  {
+    "id": 152,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Ilu parlamentarzystów liczy polski Senat?",
+    "answers": [
+      "120",
+      "50",
+      "460",
+      "100"
+    ],
+    "correctIndex": 3,
+    "explanation": "Senat tworzy 100 senatorów. To stała liczba określona ustawowo i konstytucyjnie."
+  },
+  {
+    "id": 153,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Drugą najważniejszą osobą w państwie jest:",
+    "answers": [
+      "Marszałek Senatu",
+      "Prezes Sądu Najwyższego",
+      "Prezes Rady Ministrów",
+      "Marszałek Sejmu"
+    ],
+    "correctIndex": 3,
+    "explanation": "W polskiej precedencji Marszałek Sejmu zajmuje bardzo wysokie miejsce. W razie opróżnienia urzędu Prezydenta wykonuje jego obowiązki."
+  },
+  {
+    "id": 154,
+    "category": "Prawo konstytucyjne i administracyjne",
+    "question": "Referendum to:",
+    "answers": [
+      "tajne głosowanie parlamentarzystów nad ustawą",
+      "obowiązkowe głosowanie w wyborach samorządowych",
+      "forma głosowania o charakterze powszechnym, w której udział mogą brać wszyscy obywatele uprawnieni do głosowania, tj. mający czynne prawo wyborcze",
+      "spotkanie konsultacyjne rządu z obywatelami"
+    ],
+    "correctIndex": 2,
+    "explanation": "Referendum pozwala obywatelom bezpośrednio wypowiedzieć się w ważnej sprawie. To przykład demokracji bezpośredniej. Wybrane zagadnienia dotyczące funkcjonowania Straży Granicznej, administracji oraz bezpieczeństwa i porządku publicznego"
+  },
+  {
+    "id": 155,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Podstawową jednostką samorządu terytorialnego jest:",
+    "answers": [
+      "powiat",
+      "województwo",
+      "gmina",
+      "sołectwo"
+    ],
+    "correctIndex": 2,
+    "explanation": "Gmina jest podstawową jednostką samorządu terytorialnego w Polsce. To na tym poziomie realizuje się wiele spraw lokalnych."
+  },
+  {
+    "id": 156,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Najmniejsza jednostka samorządu terytorialnego w Polsce to:",
+    "answers": [
+      "dzielnica",
+      "powiat",
+      "województwo",
+      "gmina"
+    ],
+    "correctIndex": 3,
+    "explanation": "Sołectwo jest jednostką pomocniczą, a nie samorządu terytorialnego. Najmniejszą właściwą jednostką samorządu pozostaje gmina."
+  },
+  {
+    "id": 157,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Przedstawicielem Rady Ministrów w województwie jest:",
+    "answers": [
+      "starosta",
+      "prezydent miasta",
+      "marszałek województwa",
+      "wojewoda"
+    ],
+    "correctIndex": 3,
+    "explanation": "Wojewoda reprezentuje rząd w terenie. Nadzoruje administrację rządową w województwie."
+  },
+  {
+    "id": 158,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Wybory do Sejmiku województwa odbywają się co:",
+    "answers": [
+      "5 lat",
+      "6 lat",
+      "4 lata",
+      "3 lata"
+    ],
+    "correctIndex": 0,
+    "explanation": "Kadencja organów samorządu terytorialnego wynosi obecnie 5 lat. Dotyczy to także sejmików województw."
+  },
+  {
+    "id": 159,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Rzeszów jest stolicą województwa:",
+    "answers": [
+      "Świętokrzyskiego",
+      "Małopolskiego",
+      "Lubelskiego",
+      "Podkarpackiego"
+    ],
+    "correctIndex": 3,
+    "explanation": "Rzeszów to stolica województwa podkarpackiego. Jest głównym ośrodkiem administracyjnym regionu."
+  },
+  {
+    "id": 160,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Na czele urzędu wojewódzkiego stoi:",
+    "answers": [
+      "wojewoda",
+      "starosta",
+      "burmistrz",
+      "marszałek województwa"
+    ],
+    "correctIndex": 0,
+    "explanation": "Wojewoda kieruje urzędem wojewódzkim. Jest organem administracji rządowej w województwie."
+  },
+  {
+    "id": 161,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Sejmik województwa jest:",
+    "answers": [
+      "organem stanowiącym i kontrolnym samorządu województwa",
+      "organem wykonawczym administracji rządowej",
+      "jednostką pomocniczą powiatu",
+      "organem doradczym wojewody"
+    ],
+    "correctIndex": 0,
+    "explanation": "Sejmik uchwala akty prawa miejscowego i kontroluje zarząd województwa. To organ samorządowy, a nie rządowy."
+  },
+  {
+    "id": 162,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Aktualnie w Polsce liczba województw wynosi:",
+    "answers": [
+      "15",
+      "16",
+      "18",
+      "12"
+    ],
+    "correctIndex": 1,
+    "explanation": "Taki podział administracyjny obowiązuje od reformy z 1999 roku. Polska ma 16 województw."
+  },
+  {
+    "id": 163,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Organy administracji publicznej powinny działać w sprawie:",
+    "answers": [
+      "wyłącznie na piśmie",
+      "powoli i formalistycznie",
+      "według uznania urzędnika",
+      "wnikliwie i szybko"
+    ],
+    "correctIndex": 3,
+    "explanation": "To jedna z zasad postępowania administracyjnego. Chodzi o sprawne, ale jednocześnie rzetelne załatwienie sprawy."
+  },
+  {
+    "id": 164,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Postępowanie administracyjne jest:",
+    "answers": [
+      "dwuinstancyjne, chyba że przepis szczególny stanowi inaczej",
+      "trzyinstancyjne",
+      "wyłącznie sądowe",
+      "jednoinstancyjne bez wyjątków"
+    ],
+    "correctIndex": 0,
+    "explanation": "Zasadą jest możliwość odwołania się od decyzji do organu wyższej instancji. Wyjątki mogą wynikać z przepisów szczególnych."
+  },
+  {
+    "id": 165,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Organy administracji publicznej prowadzą postępowanie w sposób:",
+    "answers": [
+      "służący wyłącznie interesowi organu",
+      "całkowicie niejawny",
+      "budzący zaufanie jego uczestników do władzy publicznej",
+      "budzący obawę uczestników"
+    ],
+    "correctIndex": 2,
+    "explanation": "To jedna z zasad Kodeksu postępowania administracyjnego. Chodzi o przejrzystość, rzetelność i uczciwość działania."
+  },
+  {
+    "id": 166,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Funkcjonariusz Straży Granicznej jest obowiązany:",
+    "answers": [
+      "nosić broń poza służbą w każdej sytuacji",
+      "utrzymywać sprawność fizyczną zapewniającą wykonywanie przez niego zadań służbowych",
+      "prowadzić działalność gospodarczą za zgodą komendanta",
+      "mieszkać przy granicy państwowej"
+    ],
+    "correctIndex": 1,
+    "explanation": "Służba wymaga odpowiedniej sprawności fizycznej. Jest ona potrzebna do realizacji ustawowych zadań formacji."
+  },
+  {
+    "id": 167,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Komendanta Głównego Straży Granicznej powołuje i odwołuje:",
+    "answers": [
+      "Sejm",
+      "Prezes Rady Ministrów na wniosek ministra właściwego do spraw wewnętrznych",
+      "Prezydent RP",
+      "minister właściwy do spraw wewnętrznych"
+    ],
+    "correctIndex": 1,
+    "explanation": "To formalna procedura wskazana w przepisach. Minister właściwy ds. wewnętrznych składa wniosek, a premier dokonuje powołania lub odwołania."
+  },
+  {
+    "id": 168,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "W Straży Granicznej obowiązują następujące korpusy:",
+    "answers": [
+      "korpus szeregowych, podoficerów, chorążych i oficerów",
+      "korpus młodszy, średni i wyższy",
+      "korpus policyjny i wojskowy",
+      "korpus cywilny, administracyjny i oficerski"
+    ],
+    "correctIndex": 0,
+    "explanation": "Struktura stopni SG jest wielostopniowa. Obejmuje wszystkie cztery wymienione korpusy."
+  },
+  {
+    "id": 169,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Obowiązek współdziałania ze Strażą Graniczną dotyczy:",
+    "answers": [
+      "wyłącznie Policji",
+      "wyłącznie organów administracji rządowej",
+      "wszystkie odpowiedzi są prawidłowe",
+      "tylko samorządu województwa"
+    ],
+    "correctIndex": 2,
+    "explanation": "Współpraca ze SG dotyczy administracji rządowej, samorządu i innych jednostek organizacyjnych. Wynika to z charakteru zadań formacji."
+  },
+  {
+    "id": 170,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Straż Graniczna została utworzona:",
+    "answers": [
+      "ustawą z dnia 16 maja 1991 r.",
+      "rozporządzeniem z dnia 12 października 1990 r.",
+      "ustawą z dnia 12 października 1990 r.",
+      "ustawą z dnia 1 maja 2004 r."
+    ],
+    "correctIndex": 2,
+    "explanation": "Ta ustawa powołała do życia Straż Graniczną. Był to element przebudowy systemu bezpieczeństwa po 1989 roku."
+  },
+  {
+    "id": 171,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Straż Graniczna jest podzielona:",
+    "answers": [
+      "na placówki i posterunki bez oddziałów",
+      "na województwa i powiaty",
+      "na komendy wojewódzkie",
+      "na Oddziały Straży Granicznej"
+    ],
+    "correctIndex": 3,
+    "explanation": "Organizacja SG opiera się na oddziałach oraz innych jednostkach organizacyjnych. Nie jest to prosty podział według województw."
+  },
+  {
+    "id": 172,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Straż Graniczna nie zajmuje się:",
+    "answers": [
+      "kontrolą ruchu granicznego",
+      "ściąganiem podatków",
+      "ochroną granicy państwowej",
+      "rozpoznawaniem przestępstw granicznych"
+    ],
+    "correctIndex": 1,
+    "explanation": "To nie należy do zadań SG. Formacja odpowiada przede wszystkim za ochronę granicy i kontrolę ruchu granicznego."
+  },
+  {
+    "id": 173,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Straż Graniczna nie jest uprawniona do:",
+    "answers": [
+      "kontroli granicznej",
+      "kontroli sanitarnej",
+      "legitymowania osób",
+      "ujmowania sprawców przestępstw"
+    ],
+    "correctIndex": 1,
+    "explanation": "Kontrola sanitarna należy do innych służb i inspekcji. SG ma inne ustawowe kompetencje."
+  },
+  {
+    "id": 174,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Zadaniem Straży Granicznej jest:",
+    "answers": [
+      "rejestracja pojazdów",
+      "wydawanie wiz i zezwoleń na przekraczanie granicy",
+      "ściąganie podatków",
+      "wydawanie dowodów osobistych"
+    ],
+    "correctIndex": 1,
+    "explanation": "W tym zestawie testowym taka odpowiedź została przewidziana jako poprawna. Pytanie ma charakter odtwórczy względem materiału egzaminacyjnego."
+  },
+  {
+    "id": 175,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Do przekroczenia granicy państwowej nie uprawnia:",
+    "answers": [
+      "dowód osobisty",
+      "dokument podróży cudzoziemca",
+      "paszport",
+      "prawo jazdy"
+    ],
+    "correctIndex": 3,
+    "explanation": "Prawo jazdy nie jest dokumentem podróży. Do przekroczenia granicy potrzebny jest dokument tożsamości lub dokument podróży przewidziany przepisami."
+  },
+  {
+    "id": 176,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Komendant Główny Straży Granicznej jest centralnym organem administracji rządowej podległym:",
+    "answers": [
+      "Prezydentowi RP",
+      "Marszałkowi Sejmu",
+      "ministrowi właściwemu do spraw wewnętrznych i administracji",
+      "Prezesowi Rady Ministrów"
+    ],
+    "correctIndex": 2,
+    "explanation": "KGSG podlega ministrowi właściwemu do spraw wewnętrznych. To określa miejsce SG w strukturze administracji."
+  },
+  {
+    "id": 177,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Ustanowionym dniem Straży Granicznej jest dzień:",
+    "answers": [
+      "12 października",
+      "11 listopada",
+      "16 maja",
+      "1 maja"
+    ],
+    "correctIndex": 2,
+    "explanation": "To oficjalne święto Straży Granicznej. Nawiązuje do utworzenia formacji."
+  },
+  {
+    "id": 178,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Instytucją UE powołaną do koordynacji i wsparcia ochrony granic zewnętrznych UE jest:",
+    "answers": [
+      "Agencja Frontex",
+      "Interpol",
+      "EASO",
+      "Europol"
+    ],
+    "correctIndex": 0,
+    "explanation": "Frontex wspiera państwa członkowskie w ochronie granic zewnętrznych Unii. To ważna agencja w obszarze bezpieczeństwa granic."
+  },
+  {
+    "id": 179,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Straż Graniczna to:",
+    "answers": [
+      "jednolita, umundurowana i uzbrojona formacja przeznaczona do ochrony granicy państwowej",
+      "agencja unijna do spraw migracji",
+      "cywilna służba pomocnicza granic",
+      "wojskowa jednostka ochrony pogranicza"
+    ],
+    "correctIndex": 0,
+    "explanation": "Tak brzmi ustawowa charakterystyka SG. Podkreśla jej jednolity i wyspecjalizowany charakter."
+  },
+  {
+    "id": 180,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Sprawy dotyczące ochrony granicy państwa i cudzoziemców podlegają:",
+    "answers": [
+      "ministrowi właściwemu do spraw wewnętrznych",
+      "Prezesowi Rady Ministrów",
+      "ministrowi spraw zagranicznych",
+      "ministrowi obrony narodowej"
+    ],
+    "correctIndex": 0,
+    "explanation": "To właśnie ten minister odpowiada za ten dział administracji rządowej. SG działa w ramach tego obszaru."
+  },
+  {
+    "id": 181,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Organem właściwym do wydania paszportu jest:",
+    "answers": [
+      "komendant placówki SG",
+      "minister spraw wewnętrznych",
+      "wojewoda",
+      "starosta"
+    ],
+    "correctIndex": 2,
+    "explanation": "W kraju paszport wydaje wojewoda. Poza granicami państwa kompetencje mogą wykonywać konsulowie."
+  },
+  {
+    "id": 182,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "PESEL to:",
+    "answers": [
+      "Państwowy Europejski System Ewidencji Ludności",
+      "Państwowy Elektroniczny System Ewidencji Paszportów",
+      "Powszechny Elektroniczny Spis Ewidencyjny Ludności",
+      "Powszechny Elektroniczny System Ewidencji Ludności"
+    ],
+    "correctIndex": 3,
+    "explanation": "PESEL to system i numer identyfikacyjny obywateli oraz niektórych cudzoziemców. Jest powszechnie używany w administracji."
+  },
+  {
+    "id": 183,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Cyfry w numerze PESEL:",
+    "answers": [
+      "nie zawierają informacji o płci",
+      "określają numer oddziału wojewódzkiego",
+      "zawierają cyfrę określającą płeć",
+      "oznaczają wyłącznie miejsce urodzenia"
+    ],
+    "correctIndex": 2,
+    "explanation": "Jedna z cyfr numeru PESEL pozwala ustalić płeć. Numer zawiera też informacje o dacie urodzenia."
+  },
+  {
+    "id": 184,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Państwa, z którymi Polska posiada granicę lądową, to:",
+    "answers": [
+      "Niemcy, Czechy, Słowacja, Litwa, Białoruś, Ukraina",
+      "Niemcy, Słowacja, Czechy, Rosja, Litwa, Białoruś,",
+      "Niemcy, Słowacja, Czechy, Litwa, Ukraina, Łotwa, Rosja",
+      "Niemcy, Słowacja, Czechy, Rosja, Litwa, Białoruś, Mołdawia"
+    ],
+    "correctIndex": 1,
+    "explanation": "Ukraina To komplet państw graniczących z Polską na lądzie. Pozostałe warianty zawierają państwa, z którymi Polska nie graniczy."
+  },
+  {
+    "id": 185,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Do podstawowych zadań Straży Granicznej należy między innymi:",
+    "answers": [
+      "wydawanie prawa jazdy",
+      "nadzór nad szkołami publicznymi",
+      "ochrona granicy państwowej i kontrola ruchu granicznego",
+      "prowadzenie postępowań podatkowych"
+    ],
+    "correctIndex": 2,
+    "explanation": "To sedno działalności SG. Formacja odpowiada za bezpieczeństwo granic oraz legalność ich przekraczania."
+  },
+  {
+    "id": 186,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Wyższa Szkoła Straży Granicznej znajduje się w:",
+    "answers": [
+      "Warszawie",
+      "Nowym Sączu",
+      "Koszalinie",
+      "Szczecinie"
+    ],
+    "correctIndex": 2,
+    "explanation": "To odpowiedź wskazana w materiale testowym. Szkoła ta pełni ważną rolę szkoleniową dla formacji."
+  },
+  {
+    "id": 187,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Siedziba Komendy Głównej Straży Granicznej znajduje się w:",
+    "answers": [
+      "Warszawie",
+      "Krakowie",
+      "Koszalinie",
+      "Białymstoku"
+    ],
+    "correctIndex": 0,
+    "explanation": "Komenda Główna SG mieści się w stolicy. Jest centralnym organem kierującym formacją."
+  },
+  {
+    "id": 188,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Agencja o nazwie FRONTEX oznacza:",
+    "answers": [
+      "Europejską Służbę Działań Zewnętrznych",
+      "Europejską Agencję Azylową",
+      "Europejską Agencję Straży Granicznej i Przybrzeżnej",
+      "Europejski Urząd Policji"
+    ],
+    "correctIndex": 2,
+    "explanation": "To pełna nazwa tej unijnej agencji. Zajmuje się wsparciem ochrony granic zewnętrznych UE."
+  },
+  {
+    "id": 189,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Podporucznik Straży Granicznej to stopień należący do korpusu:",
+    "answers": [
+      "chorążych",
+      "podoficerów",
+      "szeregowych",
+      "oficerów"
+    ],
+    "correctIndex": 3,
+    "explanation": "Podporucznik jest pierwszym stopniem oficerskim. Nie należy ani do podoficerów, ani do chorążych."
+  },
+  {
+    "id": 190,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Stopnie służbowe w korpusie podoficerów SG to m.in.:",
+    "answers": [
+      "szeregowy SG, starszy szeregowy SG, kapral SG",
+      "młodszy chorąży SG, chorąży SG, starszy chorąży SG",
+      "kapral SG, plutonowy SG, sierżant SG",
+      "podporucznik SG, porucznik SG, kapitan SG"
+    ],
+    "correctIndex": 2,
+    "explanation": "To typowe stopnie podoficerskie. Pozostałe odpowiedzi mieszają korpusy albo zawierają stopnie innych grup."
+  },
+  {
+    "id": 191,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Straż Graniczna została powołana ustawą z dnia:",
+    "answers": [
+      "16 maja 1991 r.",
+      "11 listopada 1918 r.",
+      "12 października 1990 r.",
+      "1 stycznia 1999 r."
+    ],
+    "correctIndex": 2,
+    "explanation": "To ta sama data, która pojawia się przy pytaniu o utworzenie SG. Jest kluczowa dla historii formacji."
+  },
+  {
+    "id": 192,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Nadzór nad działalnością sądów powszechnych i wojskowych w zakresie orzekania sprawuje:",
+    "answers": [
+      "Sąd Najwyższy",
+      "Trybunał Konstytucyjny",
+      "Minister Sprawiedliwości",
+      "Naczelny Sąd Administracyjny"
+    ],
+    "correctIndex": 0,
+    "explanation": "Sąd Najwyższy pełni najwyższą funkcję w strukturze sądownictwa w tym zakresie. Zapewnia jednolitość orzecznictwa."
+  },
+  {
+    "id": 193,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Starosta kieruje:",
+    "answers": [
+      "sołectwem",
+      "województwem",
+      "gminą",
+      "powiatem"
+    ],
+    "correctIndex": 3,
+    "explanation": "Starosta jest organem wykonawczym powiatu. Nie kieruje gminą ani województwem."
+  },
+  {
+    "id": 194,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Osoba, która opuszcza miejsce zamieszkania w celu osiedlenia się w innym kraju to:",
+    "answers": [
+      "uchodźca",
+      "emigrant",
+      "repatriant",
+      "imigrant"
+    ],
+    "correctIndex": 1,
+    "explanation": "Emigrant wyjeżdża z własnego kraju. Imigrant natomiast przybywa do innego państwa."
+  },
+  {
+    "id": 195,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Kadencja wójta, burmistrza i prezydenta miasta trwa:",
+    "answers": [
+      "3 lata",
+      "6 lat",
+      "4 lata",
+      "5 lat"
+    ],
+    "correctIndex": 3,
+    "explanation": "Tyle wynosi obecnie kadencja organów wykonawczych gmin. Dotyczy to wszystkich tych funkcji."
+  },
+  {
+    "id": 196,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Straż Graniczna to formacja typu:",
+    "answers": [
+      "ratowniczego",
+      "cywilnego",
+      "policyjnego",
+      "wojskowego"
+    ],
+    "correctIndex": 2,
+    "explanation": "SG ma charakter formacji policyjnej, choć jest umundurowana i uzbrojona. Nie jest formacją wojskową."
+  },
+  {
+    "id": 197,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Straż Graniczna jako formacja podlega:",
+    "answers": [
+      "Kancelarii Prezesa Rady Ministrów",
+      "Ministerstwu Spraw Zagranicznych",
+      "Ministerstwu Spraw Wewnętrznych i Administracji",
+      "Ministerstwu Obrony Narodowej"
+    ],
+    "correctIndex": 2,
+    "explanation": "To resort właściwy dla spraw bezpieczeństwa wewnętrznego i administracji. W jego strukturze funkcjonuje SG."
+  },
+  {
+    "id": 198,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Zgodnie z Ustawą o Straży Granicznej, Straż Graniczna to formacja:",
+    "answers": [
+      "jednolita, umundurowana, uzbrojona",
+      "wojskowa, umundurowana, uzbrojona",
+      "umundurowana, uzbrojona, samorządowa",
+      "jednolita, cywilna, nieuzbrojona"
+    ],
+    "correctIndex": 0,
+    "explanation": "Tak określa ją ustawa. Jest to skrócona definicja ustawowa formacji."
+  },
+  {
+    "id": 199,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Ilu jest w Polsce Marszałków Województw?",
+    "answers": [
+      "piętnastu",
+      "dwudziestu",
+      "szesnastu",
+      "czternastu"
+    ],
+    "correctIndex": 2,
+    "explanation": "Każde województwo ma jednego marszałka województwa. Ponieważ województw jest 16, marszałków też jest 16."
+  },
+  {
+    "id": 200,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Ministrowi Spraw Wewnętrznych i Administracji podlegają:",
+    "answers": [
+      "wyłącznie Policja",
+      "wyłącznie Straż Graniczna",
+      "Wszystkie ww. odpowiedzi są prawidłowe",
+      "Policja, Straż Graniczna i SOP"
+    ],
+    "correctIndex": 2,
+    "explanation": "MSWiA nadzoruje m.in. Policję, Straż Graniczną i SOP. Dlatego poprawna jest odpowiedź zbiorcza."
+  },
+  {
+    "id": 201,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Cudzoziemiec w świetle prawa polskiego to:",
+    "answers": [
+      "osoba, która nie posiada obywatelstwa polskiego",
+      "każda osoba niezameldowana w Polsce",
+      "osoba, która przekroczyła granicę bez wizy",
+      "osoba posiadająca stały pobyt poza granicami Polski"
+    ],
+    "correctIndex": 0,
+    "explanation": "To podstawowa definicja cudzoziemca w polskim prawie. Nie zależy od miejsca zamieszkania ani faktu migracji."
+  },
+  {
+    "id": 202,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Ile oddziałów znajduje się w strukturze Straży Granicznej?",
+    "answers": [
+      "7",
+      "12",
+      "16",
+      "9"
+    ],
+    "correctIndex": 3,
+    "explanation": "W materiale testowym taka odpowiedź została wskazana jako poprawna. Odnosi się ona do aktualnej struktury organizacyjnej formacji."
+  },
+  {
+    "id": 203,
+    "category": "Straż Graniczna, administracja, bezpieczeństwo",
+    "question": "Komenda Karpackiego Oddziału Straży Granicznej znajduje się w:",
+    "answers": [
+      "Mark Rutte",
+      "Radosław Sikorski",
+      "Nowym Sączu",
+      "Hanna Suchocka"
+    ],
+    "correctIndex": 2,
+    "explanation": "To siedziba Karpackiego Oddziału SG. Odpowiedź należy zapamiętać jako fakt organizacyjny."
+  }
+]
