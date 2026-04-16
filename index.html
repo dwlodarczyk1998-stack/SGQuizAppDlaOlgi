@@ -422,6 +422,65 @@
         box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.35);
       }
 
+
+      .answer-btn.correct {
+        background: rgba(34, 197, 94, 0.18);
+        border-color: rgba(34, 197, 94, 0.72);
+        box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.34);
+      }
+
+      .answer-btn.incorrect {
+        background: rgba(239, 68, 68, 0.18);
+        border-color: rgba(239, 68, 68, 0.72);
+        box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.34);
+      }
+
+      .answer-btn.dimmed {
+        opacity: 0.72;
+      }
+
+      .feedback-panel {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(148, 163, 184, 0.08);
+      }
+
+      .feedback-panel.success {
+        border-color: rgba(34, 197, 94, 0.38);
+        background: rgba(34, 197, 94, 0.12);
+      }
+
+      .feedback-panel.error {
+        border-color: rgba(239, 68, 68, 0.38);
+        background: rgba(239, 68, 68, 0.12);
+      }
+
+      .feedback-title {
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+
+      .feedback-panel.success .feedback-title {
+        color: #86efac;
+      }
+
+      .feedback-panel.error .feedback-title {
+        color: #fca5a5;
+      }
+
+      .feedback-text {
+        color: #dbe7fb;
+        line-height: 1.55;
+      }
+
+      .feedback-meta {
+        margin-top: 8px;
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
       .quiz-actions,
       .result-actions,
       .table-actions {
@@ -567,7 +626,7 @@
           <div class="brand-badge">QP</div>
           <div>
             <h1>Quiz Pro dla mojej pięknotki</h1>
-            <p>Profesjonalna platforma testowa do nauki pod egzamin</p>
+            <p>Profesjonalna platforma testowa do nauki</p>
           </div>
         </div>
         <nav class="nav">
@@ -613,7 +672,8 @@
               <div class="dog-card">
                 <img
                   class="dog-photo"
-                  src="Emi.jpg"
+                  src="C:\Users\dwlod\Desktop\Aplikacja\Emi.jpg"
+                  alt="Czarnobiały cavalier king charles spaniel"
                 />
                 <div class="dog-card-content">
                   <h3>To jest stalker</h3>
@@ -710,6 +770,7 @@
                 <div class="question-label" id="questionCategory">Kategoria</div>
                 <div class="question-text" id="questionText"></div>
                 <div class="answers" id="answersContainer"></div>
+                <div id="answerFeedback" class="feedback-panel hidden"></div>
               </div>
 
               <div class="quiz-actions">
@@ -747,6 +808,7 @@
 
               <div class="result-actions">
                 <button class="ghost-btn" id="goRankingBtn">Przejdź do rankingu</button>
+                <button class="ghost-btn" id="startTrainingBtn">Etap doszkalający</button>
                 <button class="primary-btn" id="restartTestBtn">Rozwiąż ponownie</button>
               </div>
             </div>
@@ -790,6 +852,7 @@
 
       const state = {
         currentView: 'home',
+        mode: 'main',
         testQuestions: [],
         currentQuestionIndex: 0,
         selectedAnswerIndex: null,
@@ -799,7 +862,14 @@
         elapsedSeconds: 0,
         chartInstance: null,
         currentParticipant: '',
-        questionsLoaded: false
+        questionsLoaded: false,
+        questionLocked: false,
+        questionAnswered: false,
+        firstAttemptWrongQuestions: [],
+        trainingQueue: [],
+        trainingRound: 0,
+        initialTestSnapshot: null,
+        lastPrimaryResult: null
       };
 
       const navButtons = document.querySelectorAll('.nav button');
@@ -822,6 +892,7 @@
       const questionCategory = document.getElementById('questionCategory');
       const questionText = document.getElementById('questionText');
       const answersContainer = document.getElementById('answersContainer');
+      const answerFeedback = document.getElementById('answerFeedback');
       const nextQuestionBtn = document.getElementById('nextQuestionBtn');
 
       function formatTime(seconds) {
@@ -895,40 +966,35 @@
       function stopTimer() {
         clearInterval(state.timerInterval);
       }
+
       async function loadQuestions() {
         startTestBtn.disabled = true;
         questionsStatus.textContent = 'Wczytywanie bazy pytań...';
 
-      try {
-        const response = await fetch('./questions_sg_203.json');
-        console.log('STATUS FETCH:', response.status, response.url);
+        try {
+          const response = await fetch('./questions_sg_203.json');
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+          const data = await response.json();
+          if (!Array.isArray(data)) {
+            throw new Error('Plik JSON ma nieprawidłowy format.');
+          }
 
-      const data = await response.json();
-        console.log('Pytania wczytane:', data);
-
-      if (!Array.isArray(data)) {
-        throw new Error('Plik JSON ma nieprawidłowy format.');
-      }
-
-        questionBank = data;
-        state.questionsLoaded = true;
-        questionsStatus.textContent = `Baza pytań gotowa. Wczytano ${questionBank.length} pytań.`;
-        startTestBtn.disabled = false;
-        updateTopStats();
-      } catch (error) {
-        console.error('Błąd ładowania pytań:', error);
-        state.questionsLoaded = false;
-        questionBank = [];
-        questionsStatus.textContent = `Błąd ładowania: ${error.message}`;
-        updateTopStats();
+          questionBank = data;
+          state.questionsLoaded = true;
+          questionsStatus.textContent = `Baza pytań gotowa. Wczytano ${questionBank.length} pytań.`;
+          startTestBtn.disabled = false;
+          updateTopStats();
+        } catch (error) {
+          console.error('Błąd ładowania pytań:', error);
+          state.questionsLoaded = false;
+          questionBank = [];
+          questionsStatus.textContent = 'Nie udało się wczytać questions_sg_203.json. Sprawdź, czy plik jest w tym samym folderze co index.html.';
+          updateTopStats();
         }
       }
-
-      
 
       function startTest() {
         const participantName = participantNameInput.value.trim();
@@ -949,12 +1015,19 @@
           return;
         }
 
+        state.mode = 'main';
         state.currentParticipant = participantName;
         participantDisplay.textContent = `Uczestnik: ${state.currentParticipant}`;
         state.testQuestions = shuffleArray(questionBank).slice(0, QUESTIONS_PER_TEST);
         state.currentQuestionIndex = 0;
         state.selectedAnswerIndex = null;
         state.answersMap = Array(QUESTIONS_PER_TEST).fill(null);
+        state.questionLocked = false;
+        state.questionAnswered = false;
+        state.firstAttemptWrongQuestions = [];
+        state.trainingQueue = [];
+        state.trainingRound = 0;
+        resetAnswerFeedback();
 
         quizIntro.classList.add('hidden');
         quizResult.classList.add('hidden');
@@ -965,14 +1038,93 @@
         switchView('test');
       }
 
-      function renderQuestion() {
-        const question = state.testQuestions[state.currentQuestionIndex];
-        state.selectedAnswerIndex = state.answersMap[state.currentQuestionIndex];
 
-        questionCounter.textContent = `Pytanie ${state.currentQuestionIndex + 1} / ${QUESTIONS_PER_TEST}`;
-        questionCategory.textContent = question.category || 'Pytanie testowe';
+      function resetAnswerFeedback() {
+        answerFeedback.className = 'feedback-panel hidden';
+        answerFeedback.innerHTML = '';
+      }
+
+      function getCurrentQuestionSet() {
+        return state.mode === 'training' ? state.trainingQueue : state.testQuestions;
+      }
+
+      function getCurrentQuestionTotal() {
+        return getCurrentQuestionSet().length;
+      }
+
+      function lockAnswerButtons() {
+        [...answersContainer.children].forEach(button => {
+          button.disabled = true;
+          button.style.cursor = 'default';
+        });
+      }
+
+      function unlockAnswerButtons() {
+        [...answersContainer.children].forEach(button => {
+          button.disabled = false;
+          button.style.cursor = 'pointer';
+        });
+      }
+
+      function setFeedback(type, title, text, meta = '') {
+        answerFeedback.className = `feedback-panel ${type}`;
+        answerFeedback.innerHTML = `
+          <div class="feedback-title">${title}</div>
+          <div class="feedback-text">${text}</div>
+          ${meta ? `<div class="feedback-meta">${meta}</div>` : ''}
+        `;
+      }
+
+      function updateQuizHeaderMeta() {
+        const total = getCurrentQuestionTotal();
+        const currentNumber = total ? state.currentQuestionIndex + 1 : 0;
+        questionCounter.textContent = state.mode === 'training'
+          ? `Doszkalanie ${currentNumber} / ${total}`
+          : `Pytanie ${currentNumber} / ${QUESTIONS_PER_TEST}`;
+
+        const subtitle = document.getElementById('quizSubtitle');
+        if (state.mode === 'training') {
+          subtitle.textContent = `Etap doszkalający — runda ${state.trainingRound}. Pytania błędne powtarzają się aż do poprawnej odpowiedzi.`;
+        } else {
+          subtitle.textContent = 'Odpowiedz na wszystkie pytania.';
+        }
+      }
+
+      function startTraining() {
+        if (!state.firstAttemptWrongQuestions.length) {
+          alert('Nie ma pytań do doszkalania — wszystkie odpowiedzi w pierwszym teście były poprawne.');
+          return;
+        }
+
+        state.mode = 'training';
+        state.trainingQueue = [...state.firstAttemptWrongQuestions];
+        state.trainingRound = 1;
+        state.currentQuestionIndex = 0;
+        state.selectedAnswerIndex = null;
+        state.answersMap = Array(state.trainingQueue.length).fill(null);
+        state.questionLocked = false;
+        state.questionAnswered = false;
+
+        quizIntro.classList.add('hidden');
+        quizResult.classList.add('hidden');
+        quizGame.classList.remove('hidden');
+
+        renderQuestion();
+        switchView('test');
+      }
+
+      function renderQuestion() {
+        const questions = getCurrentQuestionSet();
+        const question = questions[state.currentQuestionIndex];
+        state.selectedAnswerIndex = state.answersMap[state.currentQuestionIndex];
+        state.questionLocked = false;
+        state.questionAnswered = state.selectedAnswerIndex !== null;
+
+        updateQuizHeaderMeta();
+        questionCategory.textContent = question.category || (state.mode === 'training' ? 'Etap doszkalający' : 'Pytanie testowe');
         questionText.textContent = question.question;
-        progressBar.style.width = `${((state.currentQuestionIndex + 1) / QUESTIONS_PER_TEST) * 100}%`;
+        progressBar.style.width = `${questions.length ? ((state.currentQuestionIndex + 1) / questions.length) * 100 : 0}%`;
+        resetAnswerFeedback();
 
         answersContainer.innerHTML = '';
         question.answers.forEach((answer, index) => {
@@ -984,25 +1136,87 @@
           answersContainer.appendChild(button);
         });
 
-        nextQuestionBtn.disabled = state.selectedAnswerIndex === null;
-        nextQuestionBtn.textContent = state.currentQuestionIndex === QUESTIONS_PER_TEST - 1 ? 'Zakończ test' : 'Dalej';
+        unlockAnswerButtons();
+        nextQuestionBtn.disabled = true;
+        nextQuestionBtn.textContent = state.currentQuestionIndex === questions.length - 1
+          ? (state.mode === 'training' ? 'Zakończ etap' : 'Zakończ test')
+          : 'Dalej';
       }
 
       function selectAnswer(index) {
+        if (state.questionLocked) return;
+
+        const questions = getCurrentQuestionSet();
+        const question = questions[state.currentQuestionIndex];
+        const isCorrect = index === question.correctIndex;
+
         state.selectedAnswerIndex = index;
         state.answersMap[state.currentQuestionIndex] = index;
+        state.questionAnswered = true;
+        state.questionLocked = true;
+
         [...answersContainer.children].forEach((button, btnIndex) => {
-          button.classList.toggle('selected', btnIndex === index);
+          button.classList.remove('selected', 'correct', 'incorrect', 'dimmed');
+
+          if (btnIndex === question.correctIndex) {
+            button.classList.add('correct');
+          }
+
+          if (btnIndex === index && !isCorrect) {
+            button.classList.add('incorrect');
+          }
+
+          if (btnIndex !== index && btnIndex !== question.correctIndex) {
+            button.classList.add('dimmed');
+          }
         });
+
+        lockAnswerButtons();
+
+        if (state.mode === 'main') {
+          if (isCorrect) {
+            setFeedback('success', 'Dobra odpowiedź', 'Świetnie — zaznaczona odpowiedź jest poprawna.');
+          } else {
+            setFeedback(
+              'error',
+              'To nie jest poprawna odpowiedź',
+              `Prawidłowa odpowiedź to: ${String.fromCharCode(65 + question.correctIndex)}. ${question.answers[question.correctIndex]}`
+            );
+          }
+        } else {
+          if (isCorrect) {
+            setFeedback(
+              'success',
+              'Poprawnie',
+              'To pytanie zostało zaliczone i nie wróci już w kolejnych rundach doszkalających.',
+              `Runda ${state.trainingRound}`
+            );
+          } else {
+            setFeedback(
+              'error',
+              'Jeszcze raz',
+              `To pytanie wróci w następnej rundzie. Prawidłowa odpowiedź to: ${String.fromCharCode(65 + question.correctIndex)}. ${question.answers[question.correctIndex]}`,
+              `Runda ${state.trainingRound}`
+            );
+          }
+        }
+
         nextQuestionBtn.disabled = false;
       }
 
       function nextQuestion() {
-        if (state.selectedAnswerIndex === null) return;
+        if (!state.questionAnswered) return;
 
-        if (state.currentQuestionIndex < QUESTIONS_PER_TEST - 1) {
+        const questions = getCurrentQuestionSet();
+
+        if (state.currentQuestionIndex < questions.length - 1) {
           state.currentQuestionIndex += 1;
           renderQuestion();
+          return;
+        }
+
+        if (state.mode === 'training') {
+          finishTrainingRound();
           return;
         }
 
@@ -1015,12 +1229,19 @@
           return acc + (state.answersMap[index] === question.correctIndex ? 1 : 0);
         }, 0);
 
+        const wrongQuestions = state.testQuestions.filter((question, index) => state.answersMap[index] !== question.correctIndex);
+        state.firstAttemptWrongQuestions = wrongQuestions.map(question => ({ ...question }));
+        state.initialTestSnapshot = {
+          questions: state.testQuestions.map(question => ({ ...question })),
+          answersMap: [...state.answersMap]
+        };
+
         const scorePercent = Math.round((correctAnswers / QUESTIONS_PER_TEST) * 100);
         const totalTime = state.elapsedSeconds;
         const attemptDate = new Date();
 
         const results = loadResults();
-        results.push({
+        const resultRecord = {
           id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
           participantName: state.currentParticipant,
           scorePercent,
@@ -1029,24 +1250,61 @@
           totalTime,
           dateISO: attemptDate.toISOString(),
           displayDate: attemptDate.toLocaleString('pl-PL')
-        });
+        };
+
+        results.push(resultRecord);
         saveResults(results);
+        state.lastPrimaryResult = resultRecord;
 
         document.getElementById('resultParticipant').textContent = state.currentParticipant;
         document.getElementById('resultScore').textContent = `${scorePercent}%`;
         document.getElementById('resultCorrect').textContent = `${correctAnswers} / ${QUESTIONS_PER_TEST}`;
         document.getElementById('resultTime').textContent = formatTime(totalTime);
 
+        const trainingBtn = document.getElementById('startTrainingBtn');
+        trainingBtn.disabled = state.firstAttemptWrongQuestions.length === 0;
+        trainingBtn.textContent = state.firstAttemptWrongQuestions.length
+          ? `Etap doszkalający (${state.firstAttemptWrongQuestions.length})`
+          : 'Etap doszkalający — brak błędów';
+
         quizGame.classList.add('hidden');
         quizResult.classList.remove('hidden');
         updateTopStats();
       }
 
+      function finishTrainingRound() {
+        const incorrectQuestions = state.trainingQueue.filter((question, index) => state.answersMap[index] !== question.correctIndex);
+
+        if (!incorrectQuestions.length) {
+          quizGame.classList.add('hidden');
+          quizResult.classList.remove('hidden');
+          const resultNote = document.getElementById('resultParticipant');
+          resultNote.textContent = `${state.currentParticipant} · etap doszkalający ukończony`;
+          return;
+        }
+
+        state.trainingRound += 1;
+        state.trainingQueue = incorrectQuestions.map(question => ({ ...question }));
+        state.currentQuestionIndex = 0;
+        state.selectedAnswerIndex = null;
+        state.answersMap = Array(state.trainingQueue.length).fill(null);
+        state.questionLocked = false;
+        state.questionAnswered = false;
+
+        renderQuestion();
+      }
+
       function cancelTest() {
         stopTimer();
+        state.mode = 'main';
         state.testQuestions = [];
+        state.trainingQueue = [];
         state.answersMap = [];
         state.currentQuestionIndex = 0;
+        state.selectedAnswerIndex = null;
+        state.questionLocked = false;
+        state.questionAnswered = false;
+        resetAnswerFeedback();
         quizGame.classList.add('hidden');
         quizResult.classList.add('hidden');
         quizIntro.classList.remove('hidden');
@@ -1199,10 +1457,14 @@
       document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
       document.getElementById('cancelTestBtn').addEventListener('click', cancelTest);
       document.getElementById('restartTestBtn').addEventListener('click', () => {
+        state.mode = 'main';
+        state.trainingQueue = [];
+        state.trainingRound = 0;
         quizResult.classList.add('hidden');
         quizIntro.classList.remove('hidden');
         participantNameInput.focus();
       });
+      document.getElementById('startTrainingBtn').addEventListener('click', startTraining);
       document.getElementById('goRankingBtn').addEventListener('click', () => switchView('ranking'));
       document.getElementById('clearResultsBtn').addEventListener('click', clearResults);
       startTestBtn.addEventListener('click', startTest);
